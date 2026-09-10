@@ -1,11 +1,35 @@
 # tools/
 
-Development scripts. Neither is needed to run or deploy the site.
+Development scripts. None of them is needed to run or deploy the site.
+
+## dev.py — the iteration loop
+
+`make dev` runs this. It serves `docs/` on http://localhost:8000 and watches
+`data/*.yaml`, rebuilding `docs/data.json` on every save. The page reloads
+itself when either it or the bundle changes, so editing `docs/index.html` or a
+YAML file and saving is the whole loop.
+
+The repo is bind-mounted into the container, so host edits are visible instantly
+— what this adds is the rebuild and the reload.
+
+- Files are served `Cache-Control: no-store`, so a reload always gets current
+  bytes rather than a cached page.
+- Live reload lives in `docs/index.html` and is guarded on
+  `location.hostname === "localhost"`, so it is inert on GitHub Pages. It polls
+  `Last-Modified` once every 700 ms.
+- A reload discards whatever was selected on the page. That is usually what you
+  want while iterating on layout.
+- A YAML syntax error prints `BUILD FAILED` with the parser message and leaves
+  the server running on the last good bundle. Fix the file and the next save
+  rebuilds.
+
+Stdlib only — it polls mtimes rather than taking a dependency on a file-watching
+library.
 
 ## shot.py — primarily for LLM agents
 
 **This exists so an AI coding agent can see the page it just changed.** A human
-maintainer should just open `make serve` in a browser; that is faster and
+maintainer should just open `make dev` in a browser; that is faster and
 better. The script is here because an agent has no browser, and without it an
 agent editing `docs/index.html` is working blind — it can verify the arithmetic
 with `make test` but cannot tell whether the page actually renders, whether a
@@ -17,7 +41,7 @@ any JavaScript error. No Python dependencies — the WebSocket client is inlined
 A capture takes well under a second.
 
 ```bash
-make serve    # in another terminal
+make dev    # in another terminal
 
 python3 tools/shot.py http://localhost:8000/ -o /tmp/check.png \
     --wait 'document.querySelector("tr[data-i]")'

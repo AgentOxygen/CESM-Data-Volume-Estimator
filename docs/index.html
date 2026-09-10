@@ -191,6 +191,20 @@ fetch("data.json").then(r => r.json()).then(data => {
   document.getElementById("main").textContent =
     "Could not load data.json: " + e + "  (run `make build`, and serve over HTTP)";
 });
+
+// Dev-only live reload, for `make dev`. Inert anywhere but localhost, so this
+// never runs on GitHub Pages.
+if (["localhost", "127.0.0.1"].includes(location.hostname)) {
+  const stamp = () => Promise.all([location.pathname, "data.json"].map(f =>
+    fetch(f, { method: "HEAD", cache: "no-store" })
+      .then(r => r.headers.get("last-modified"))));
+  stamp().then(seen => setInterval(async () => {
+    try {
+      const now = await stamp();
+      if (String(now) !== String(seen)) location.reload();
+    } catch {}
+  }, 700));
+}
 </script>
 </body>
 </html>

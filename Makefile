@@ -1,4 +1,4 @@
-.PHONY: test build serve shell import
+.PHONY: test build dev shell import
 
 DC = docker compose run --rm dev
 
@@ -10,9 +10,10 @@ test:
 build:
 	$(DC) python estimator.py build
 
-# Serve the site at http://localhost:8000
-serve:
-	docker compose run --rm --service-ports dev python -m http.server 8000 -d docs
+# Serve the site at http://localhost:8000, rebuilding docs/data.json whenever
+# data/*.yaml changes. The page reloads itself when either changes.
+dev:
+	docker compose run --rm --service-ports dev python tools/dev.py
 
 shell:
 	$(DC) bash

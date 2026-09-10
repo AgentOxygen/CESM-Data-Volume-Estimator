@@ -1,0 +1,3028 @@
+# atm history fields. Seeded from reference/lens2output200129.csv, then
+# maintained by hand. See README.md -> "Add or correct a variable".
+#
+#   dims    copy verbatim from `ncdump -h`, in order, including `time`.
+#   streams <stream>: <tier>  -- which LENS2 preset the variable belongs to.
+#
+# A variable may appear twice with DIFFERENT dims (CTSM writes some fields
+# gridded in one stream and as subgrid vectors in another). Keep them separate.
+
+horiz_dims: [lat, lon]
+dtype_bytes: 4
+
+variables:
+- name: ABSORB
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol absorption day only
+  units: /m
+- name: ACTNI
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Average Cloud Top ice number
+  units: m-3
+- name: ACTNL
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Average Cloud Top droplet number
+  units: m-3
+- name: ACTREI
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Average Cloud Top ice effective radius
+  units: Micron
+- name: ACTREL
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Average Cloud Top droplet effective radius
+  units: Micron
+- name: ADRAIN
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Average rain effective Diameter
+  units: Micron
+- name: ADSNOW
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Average snow effective Diameter
+  units: Micron
+- name: AEROD_v
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Total Aerosol Optical Depth in visible band
+  units: '1'
+- name: ANRAIN
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Average rain number conc
+  units: m-3
+- name: ANSNOW
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Average snow number conc
+  units: m-3
+- name: AODABSdn
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol absorption optical depth 550 nm day night
+  units: no units
+- name: AODBCdn
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm from BC day night
+  units: no units
+- name: AODDUST
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm from dust day only
+  units: no units
+- name: AODDUST1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth day only 550 nm mode 1 from dust
+  units: no units
+- name: AODDUST2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm model 2 from dust
+  units: no units
+- name: AODDUST3
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth day only 550 nm mode 3 from dust
+  units: no units
+- name: AODNIRstdn
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Stratospheric aerosol optical depth 1020 nm day night
+  units: no units
+- name: AODPOMdn
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm from POM day night
+  units: no units
+- name: AODSO4dn
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm from SO4 day night
+  units: no units
+- name: AODSOAdn
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm from SOA day night
+  units: no units
+- name: AODSSdn
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm from seasalt day night
+  units: no units
+- name: AODUVdn
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 350 nm day night
+  units: no units
+- name: AODUVstdn
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Stratospheric aerosol optical depth 350 nm day night
+  units: no units
+- name: AODVIS
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Aerosol optical depth 550 nm day only
+  units: no units
+- name: AODVISdn
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm day night
+  units: no units
+- name: AODVISstdn
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Stratospheric aerosol optical depth 550 nm day night
+  units: no units
+- name: AODdnDUST1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm day night mode 1 from dust
+  units: no units
+- name: AODdnDUST2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm day night mode 2 from dust
+  units: no units
+- name: AODdnDUST3
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm day night mode 3 from dust
+  units: no units
+- name: AODdnMODE1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm day night mode 1
+  units: no units
+- name: AODdnMODE2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm day night mode 2
+  units: no units
+- name: AODdnMODE3
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol optical depth 550 nm day night mode 3
+  units: no units
+- name: AQRAIN
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Average rain mixing ratio
+  units: kg/kg
+- name: AQSNOW
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Average snow mixing ratio
+  units: kg/kg
+- name: AQ_SO2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: SO2 aqueous chemistry (for gas species)
+  units: kg/m2/s
+- name: AREA
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: area of grid box
+  units: m2
+- name: AREI
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Average ice effective radius
+  units: Micron
+- name: AREL
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Average droplet effective radius
+  units: Micron
+- name: AWNC
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Average cloud water number conc
+  units: m-3
+- name: AWNI
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Average cloud ice number conc
+  units: m-3
+- name: BROX
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: brox (Br+BrO+BRCl+HOBr)
+  units: mol/mol
+- name: BROY
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: total inorganic bromine (Br+BrO+HOBr+BrONO2+HBr+BrCl)
+  units: mol/mol
+- name: BURDENBCdn
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Black carbon aerosol burden day night
+  units: kg/m2
+- name: BURDENDUSTdn
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Dust aerosol burden day night
+  units: kg/m2
+- name: BURDENPOMdn
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: POM aerosol burden day night
+  units: kg/m2
+- name: BURDENSEASALTdn
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Seasalt aerosol burden day night
+  units: kg/m2
+- name: BURDENSO4
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Sulfate aerosol burden day only
+  units: kg/m2
+- name: BURDENSO4dn
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Sulfate aerosol burden day night
+  units: kg/m2
+- name: BURDENSOAdn
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: SOA aerosol burden day night
+  units: kg/m2
+- name: CAPE
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Convectively available potential energy
+  units: J/kg
+- name: CCN3
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: CCN concentration at S=0.1%
+  units: '#/cm3'
+- name: CDNUMC
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Vertically-integrated droplet concentration
+  units: 1/m2
+- name: CFAD_DBZE94_CS
+  dims: [time, cosp_ht, cosp_dbze, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Radar Reflectivity Factor CFAD (94 GHz)
+  units: fraction
+- name: CFAD_SR532_CAL
+  dims: [time, cosp_ht, cosp_sr, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Scattering Ratio CFAD (532 nm)
+  units: fraction
+- name: CLDHGH
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Vertically-integrated high cloud
+  units: fraction
+- name: CLDHGH_CAL
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar High-level Cloud Fraction
+  units: percent
+- name: CLDHGH_CAL_ICE
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar High-level Ice Cloud Fraction
+  units: percent
+- name: CLDHGH_CAL_LIQ
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar High-level Liquid Cloud Fraction
+  units: percent
+- name: CLDHGH_CAL_UN
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar High-level Undefined-Phase Cloud Fraction
+  units: percent
+- name: CLDICE
+  dims: [time, lev, lat, lon]
+  streams: {day_1: MOAR, month_1: MOAR}
+  long_name: Grid box averaged cloud ice amount
+  units: kg/kg
+- name: CLDLIQ
+  dims: [time, lev, lat, lon]
+  streams: {day_1: MOAR, month_1: MOAR}
+  long_name: Grid box averaged cloud liquid amount
+  units: kg/kg
+- name: CLDLOW
+  dims: [time, lat, lon]
+  streams: {hour_3: MOAR, month_1: std}
+  long_name: Vertically-integrated low cloud
+  units: fraction
+- name: CLDLOW_CAL
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Low-level Cloud Fraction
+  units: percent
+- name: CLDLOW_CAL_ICE
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Low-level Ice Cloud Fraction
+  units: percent
+- name: CLDLOW_CAL_LIQ
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Low-level Liquid Cloud Fraction
+  units: percent
+- name: CLDLOW_CAL_UN
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Low-level Undefined-Phase Cloud Fraction
+  units: percent
+- name: CLDMED
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Vertically-integrated mid-level cloud
+  units: fraction
+- name: CLDMED_CAL
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Mid-level Cloud Fraction
+  units: percent
+- name: CLDMED_CAL_ICE
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Mid-level Ice Cloud Fraction
+  units: percent
+- name: CLDMED_CAL_LIQ
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Mid-level Liquid Cloud Fraction
+  units: percent
+- name: CLDMED_CAL_UN
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Mid-level Undefined-Phase Cloud Fraction
+  units: percent
+- name: CLDTOT
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_3: MOAR, month_1: std}
+  long_name: Vertically-integrated total cloud
+  units: fraction
+- name: CLDTOT_CAL
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Total Cloud Fraction
+  units: percent
+- name: CLDTOT_CALCS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar and Radar Total Cloud Fraction
+  units: percent
+- name: CLDTOT_CAL_ICE
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Total Ice Cloud Fraction
+  units: percent
+- name: CLDTOT_CAL_LIQ
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Total Liquid Cloud Fraction
+  units: percent
+- name: CLDTOT_CAL_UN
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Total Undefined-Phase Cloud Fraction
+  units: percent
+- name: CLDTOT_CS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Radar total cloud amount
+  units: percent
+- name: CLDTOT_CS2
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Radar total cloud amount without the data for the first kilometer above surface
+  units: percent
+- name: CLDTOT_ISCCP
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Total Cloud Fraction Calculated by the ISCCP Simulator
+  units: percent
+- name: CLD_CAL
+  dims: [time, cosp_ht, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Cloud Fraction (532 nm)
+  units: percent
+- name: CLD_CAL_ICE
+  dims: [time, cosp_ht, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Ice Cloud Fraction
+  units: percent
+- name: CLD_CAL_LIQ
+  dims: [time, cosp_ht, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Liquid Cloud Fraction
+  units: percent
+- name: CLD_CAL_NOTCS
+  dims: [time, cosp_ht, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Cloud occurrence seen by CALIPSO but not CloudSat
+  units: percent
+- name: CLD_CAL_UN
+  dims: [time, cosp_ht, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Lidar Undefined-Phase Cloud Fraction
+  units: percent
+- name: CLD_MISR
+  dims: [time, cosp_htmisr, cosp_tau, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Cloud Fraction from MISR Simulator
+  units: percent
+- name: CLHMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS High Level Cloud Fraction
+  units: '%'
+- name: CLIMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Ice Cloud Fraction
+  units: '%'
+- name: CLLMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Low Level Cloud Fraction
+  units: '%'
+- name: CLMMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Mid Level Cloud Fraction
+  units: '%'
+- name: CLMODIS
+  dims: [time, cosp_prs, cosp_tau_modis, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Cloud Area Fraction
+  units: '%'
+- name: CLOUD
+  dims: [time, lev, lat, lon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: Cloud fraction
+  units: fraction
+- name: CLOUDCOVER_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Cloud Cover
+  units: fraction
+- name: CLOUDFRAC_CLUBB
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Cloud Fraction
+  units: fraction
+- name: CLOX
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: clox (Cl+CLO+HOCl+2Cl2+2Cl2O2+OClO
+  units: mol/mol
+- name: CLOY
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: total inorganic chlorine (Cl+ClO+2Cl2+2Cl2O2+OClO+HOCl+ClONO2+HCl+BrCl)
+  units: mol/mol
+- name: CLRIMODIS
+  dims: [time, cosp_reffice, cosp_tau_modis, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Cloud Area Fraction
+  units: '%'
+- name: CLRLMODIS
+  dims: [time, cosp_reffliq, cosp_tau_modis, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Cloud Area Fraction
+  units: '%'
+- name: CLTMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Total Cloud Fraction
+  units: '%'
+- name: CLWMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Liquid Cloud Fraction
+  units: '%'
+- name: CME
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Rate of cond-evap within the cloud
+  units: kg/kg/s
+- name: CMFDQ
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: QV tendency - shallow convection
+  units: kg/kg/s
+- name: CMFMC
+  dims: [time, ilev, lat, lon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: Moist convection (deep+shallow) mass flux
+  units: kg/m2/s
+- name: CMFMCDZM
+  dims: [time, ilev, lat, lon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: Convection mass flux from ZM deep
+  units: kg/m2/s
+- name: CO2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: CO2
+  units: kg/kg
+- name: CO2_FFF
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: CO2_FFF
+  units: kg/kg
+- name: CO2_LND
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: CO2_LND
+  units: kg/kg
+- name: CO2_OCN
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: CO2_OCN
+  units: kg/kg
+- name: CONCLD
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Convective cloud cover
+  units: fraction
+- name: DCQ
+  dims: [time, lev, lat, lon]
+  streams: {day_1: MOAR, month_1: MOAR}
+  long_name: Q tendency due to moist processes
+  units: kg/kg/s
+- name: DF_H2O2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dry deposition flux
+  units: kg/m2/s
+- name: DF_H2SO4
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dry deposition flux
+  units: kg/m2/s
+- name: DF_SO2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dry deposition flux
+  units: kg/m2/s
+- name: DH2O2CHM
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: net tendency from chem
+  units: kg/s
+- name: DMS
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: DMS concentration
+  units: mol/mol
+- name: DMS_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: DMS in bottom layer
+  units: mol/mol
+- name: DTCOND
+  dims: [time, lev, lat, lon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: T tendency - moist processes
+  units: K/s
+- name: DTCORE
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: T tendency due to dynamical core
+  units: K/s
+- name: DTV
+  dims: [time, lev, lat, lon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: T vertical diffusion
+  units: K/s
+- name: DTWR_H2O2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: wet removal Neu scheme tendency
+  units: kg/kg/s
+- name: DTWR_H2SO4
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: wet removal Neu scheme tendency
+  units: kg/kg/s
+- name: DTWR_SO2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: wet removal Neu scheme tendency
+  units: kg/kg/s
+- name: Dso4_a1CHM
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: net tendency from chem
+  units: kg/s
+- name: Dso4_a2CHM
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: net tendency from chem
+  units: kg/s
+- name: Dso4_a3CHM
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: net tendency from chem
+  units: kg/s
+- name: EVAPPREC
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Rate of evaporation of falling precip
+  units: kg/kg/s
+- name: EVAPQZM
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Q tendency - Evaporation from Zhang-McFarlane moist convection
+  units: kg/kg/s
+- name: EVAPTZM
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: T tendency - Evaporation/snow prod from Zhang convection
+  units: K/s
+- name: EXTINCTNIRdn
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol extinction 1020 nm day night
+  units: /m
+- name: EXTINCTUVdn
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol extinction 350 nm day night
+  units: /m
+- name: EXTINCTdn
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol extinction 550 nm day night
+  units: /m
+- name: EXTxASYMdn
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: extinction 550 times asymmetry factor day night
+  units: no units
+- name: FCTI
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Fractional occurrence of cloud top ice
+  units: fraction
+- name: FCTL
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Fractional occurrence of cloud top liquid
+  units: fraction
+- name: FICE
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Fractional ice content within cloud
+  units: fraction
+- name: FISCCP1_COSP
+  dims: [time, cosp_prs, cosp_tau, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Grid-box fraction covered by each ISCCP D level cloud type
+  units: percent
+- name: FLDS
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Downwelling longwave flux at surface
+  units: W/m2
+- name: FLDSC
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Clearsky Downwelling longwave flux at surface
+  units: W/m2
+- name: FLNR
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Net longwave flux at tropopause
+  units: W/m2
+- name: FLNS
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Net longwave flux at surface
+  units: W/m2
+- name: FLNSC
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Clearsky net longwave flux at surface
+  units: W/m2
+- name: FLNT
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Net longwave flux at top of model
+  units: W/m2
+- name: FLNTC
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Clearsky net longwave flux at top of model
+  units: W/m2
+- name: FLNTCLR
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Clearsky ONLY points net longwave flux at top of model
+  units: W/m2
+- name: FLUT
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_3: MOAR, hour_6: std, month_1: std}
+  long_name: Upwelling longwave flux at top of model
+  units: W/m2
+- name: FLUTC
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Clearsky upwelling longwave flux at top of model
+  units: W/m2
+- name: FREQCLR
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Frequency of Occurrence of Clearsky
+  units: Frac
+- name: FREQI
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Fractional occurrence of ice
+  units: fraction
+- name: FREQL
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Fractional occurrence of liquid
+  units: fraction
+- name: FREQR
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Fractional occurrence of rain
+  units: fraction
+- name: FREQS
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Fractional occurrence of snow
+  units: fraction
+- name: FREQZM
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Fractional occurance of ZM convection
+  units: fraction
+- name: FSDS
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Downwelling solar flux at surface
+  units: W/m2
+- name: FSDSC
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Clearsky downwelling solar flux at surface
+  units: W/m2
+- name: FSNR
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Net solar flux at tropopause
+  units: W/m2
+- name: FSNS
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Net solar flux at surface
+  units: W/m2
+- name: FSNSC
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Clearsky net solar flux at surface
+  units: W/m2
+- name: FSNT
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Net solar flux at top of model
+  units: W/m2
+- name: FSNTC
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Clearsky net solar flux at top of model
+  units: W/m2
+- name: FSNTOA
+  dims: [time, lat, lon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: Net solar flux at top of atmosphere
+  units: W/m2
+- name: FSNTOAC
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Clearsky net solar flux at top of atmosphere
+  units: W/m2
+- name: FSUTOA
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Upwelling solar flux at top of atmosphere
+  units: W/m2
+- name: GS_SO2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: SO2 gas chemistry/wet removal (for gas species)
+  units: kg/m2/s
+- name: H2O
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: water vapor concentration
+  units: mol/mol
+- name: H2O2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: H2O2 concentration
+  units: mol/mol
+- name: H2O2_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: H2O2 in bottom layer
+  units: mol/mol
+- name: H2O_CLXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for H2O
+  units: molec/cm2/s
+- name: H2O_CMXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for H2O
+  units: kg/m2/s
+- name: H2O_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: water vapor in bottom layer
+  units: mol/mol
+- name: H2SO4
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: H2SO4 concentration
+  units: mol/mol
+- name: H2SO4M_C
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: chemical sulfate aerosol mass
+  units: ug/m3
+- name: H2SO4_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: H2SO4 in bottom layer
+  units: mol/mol
+- name: H2SO4_sfnnuc1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: H2SO4 modal_aero new particle nucleation column tendency
+  units: kg/m2/s
+- name: HCL_GAS
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: gas-phase hcl
+  units: mol/mol
+- name: HNO3_GAS
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: gas-phase hno3
+  units: mol/mol
+- name: HNO3_NAT
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: NAT condensed HNO3
+  units: mol/mol
+- name: HNO3_STS
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: STS condensed HNO3
+  units: mol/mol
+- name: HO2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: prescribed tracer constituent
+  units: mol/mol
+- name: ICEFRAC
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Fraction of sfc area covered by sea-ice
+  units: fraction
+- name: ICIMR
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Prognostic in-cloud ice mixing ratio
+  units: kg/kg
+- name: ICWMR
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Prognostic in-cloud water mixing ratio
+  units: kg/kg
+- name: IVT
+  dims: [time, lat, lon]
+  streams: {hour_6: MOAR}
+  long_name: Integrated Vapor Transport
+  units: kg m-2 s-1
+- name: IWC
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Grid box average ice water content
+  units: kg/m3
+- name: IWPMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Cloud Ice Water Path time CLIMODIS
+  units: kg m-2
+- name: KVH_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: CLUBB vertical diffusivity of heat/moisture on interface levels
+  units: m2/s
+- name: LANDFRAC
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Fraction of sfc area covered by land
+  units: fraction
+- name: LHFLX
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_3: MOAR, month_1: std}
+  long_name: Surface latent heat flux
+  units: W/m2
+- name: LWCF
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Longwave cloud forcing
+  units: W/m2
+- name: LWPMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Cloud Liquid Water Path times CLWMODIS
+  units: kg m-2
+- name: MASS
+  dims: [time, lev, lat, lon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: mass of grid box
+  units: kg
+- name: MEANCLDALB_ISCCP
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Mean cloud albedo times CLDTOT_ISCCP
+  units: '1'
+- name: MEANPTOP_ISCCP
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Mean cloud top pressure times CLDTOT_ISCCP
+  units: Pa
+- name: MEANTAU_ISCCP
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Mean optical thickness times CLDTOT_ISCCP
+  units: '1'
+- name: MEANTBCLR_ISCCP
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Mean Clear-sky Infrared Tb from ISCCP simulator
+  units: K
+- name: MEANTB_ISCCP
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Mean Infrared Tb from ISCCP simulator
+  units: K
+- name: MSKtem
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: TEM mask
+  units: '1'
+- name: NITROP_PD
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Chemical Tropopause probability
+  units: no units
+- name: NO3
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: prescribed tracer constituent
+  units: mol/mol
+- name: NOX
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: nox (N+NO+NO2)
+  units: mol/mol
+- name: NOY
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: noy = total nitrogen (N+NO+NO2+NO3+2N2O5+HNO3+HO2NO2+ORGNOY+NH4NO3
+  units: mol/mol
+- name: NUMICE
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Grid box averaged cloud ice number
+  units: 1/kg
+- name: NUMLIQ
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Grid box averaged cloud liquid number
+  units: 1/kg
+- name: NUMRAI
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Grid box averaged rain number
+  units: 1/kg
+- name: NUMSNO
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Grid box averaged snow number
+  units: 1/kg
+- name: O3
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: prescribed tracer constituent
+  units: mol/mol
+- name: OCNFRAC
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Fraction of sfc area covered by ocean
+  units: fraction
+- name: OH
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: prescribed tracer constituent
+  units: mol/mol
+- name: OMEGA
+  dims: [time, lev, lat, lon]
+  streams: {day_1: std, hour_6: MOAR, month_1: std}
+  long_name: Vertical velocity (pressure)
+  units: Pa/s
+- name: OMEGA500
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_6: std}
+  long_name: Vertical velocity at 500 mbar pressure surface
+  units: Pa/s
+- name: OMEGAT
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Vertical heat flux
+  units: K Pa/s
+- name: PBLH
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: PBL height
+  units: m
+- name: PCTMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Cloud Top Pressure times CLTMODIS
+  units: Pa
+- name: PDELDRY
+  dims: [time, lev, lat, lon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: Dry pressure difference between levels
+  units: Pa
+- name: PHIS
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Surface geopotential
+  units: m2/s2
+- name: PRECC
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_3: MOAR, hour_6: std, month_1: std}
+  long_name: Convective precipitation rate (liq + ice)
+  units: m/s
+- name: PRECL
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_3: MOAR, hour_6: std, month_1: std}
+  long_name: Large-scale (stable) precipitation rate (liq + ice)
+  units: m/s
+- name: PRECSC
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_6: std, month_1: std}
+  long_name: Convective snow rate (water equivalent)
+  units: m/s
+- name: PRECSL
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_6: std, month_1: std}
+  long_name: Large-scale (stable) snow rate (water equivalent)
+  units: m/s
+- name: PRECT
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_1: MOAR, hour_6: std, month_1: std}
+  long_name: Total (convective and large-scale) precipitation rate (liq+ice)
+  units: m/s
+- name: PRECTMX
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Maximum (convective and large-scale) precipitation rate (liq+ice)
+  units: m/s
+- name: PS
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_6: MOAR, month_1: std}
+  long_name: Surface pressure
+  units: Pa
+- name: PSL
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_6: std, month_1: std}
+  long_name: Sea level pressure
+  units: Pa
+- name: PTEQ
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Q total physics tendency
+  units: kg/kg/s
+- name: PTTEND
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: T total physics tendency
+  units: K/s
+- name: Q
+  dims: [time, lev, lat, lon]
+  streams: {day_1: std, hour_6: MOAR, month_1: std}
+  long_name: Specific humidity
+  units: kg/kg
+- name: Q200
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Specific humidity at 200 mbar pressure surface
+  units: kg/kg
+- name: Q500
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Specific humidity at 500 mbar pressure surface
+  units: kg/kg
+- name: Q700
+  dims: [time, lev, lat, lon]
+  streams: {day_1: std}
+  long_name: Vertical velocity at 700 mbar pressure surface
+  units: Pa/s
+- name: Q850
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Specific humidity at 800 mbar pressure surface
+  units: kg/kg
+- name: QFLX
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Surface water flux
+  units: kg/m2/s
+- name: QRAIN
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Diagnostic grid-mean rain mixing ratio
+  units: kg/kg
+- name: QREFHT
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_6: MOAR, month_1: std}
+  long_name: Reference height humidity
+  units: kg/kg
+- name: QRL
+  dims: [time, lev, lat, lon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: Longwave heating rate
+  units: K/s
+- name: QRLC
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Clearsky longwave heating rate
+  units: K/s
+- name: QRS
+  dims: [time, lev, lat, lon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: Solar heating rate
+  units: K/s
+- name: QRSC
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Clearsky solar heating rate
+  units: K/s
+- name: QSNOW
+  dims: [time, lev, lat, lon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: Diagnostic grid-mean snow mixing ratio
+  units: kg/kg
+- name: QT
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Total water mixing ratio
+  units: kg/kg
+- name: RAD_ICE
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: sad ice
+  units: cm
+- name: RAD_LNAT
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: large nat radius
+  units: cm
+- name: RAD_SULFC
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: chemical sad sulfate
+  units: cm
+- name: RAINQM
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Grid box averaged rain amount
+  units: kg/kg
+- name: RCMINLAYER_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Cloud Water in Layer
+  units: g/kg
+- name: RCMTEND_CLUBB
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Cloud Liquid Water Tendency
+  units: g/kg /s
+- name: RCM_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Cloud Water Mixing Ratio
+  units: g/kg
+- name: REFFCLIMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Ice Cloud Particle Size times CLIMODIS
+  units: m
+- name: REFFCLWMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Liquid Cloud Particle Size times CLWMODIS
+  units: m
+- name: REFF_AERO
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: aerosol effective radius
+  units: cm
+- name: RELHUM
+  dims: [time, lev, lat, lon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: Relative humidity
+  units: percent
+- name: RELVAR
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Relative cloud water variance
+  units: no units
+- name: RFL_PARASOL
+  dims: [time, cosp_sza, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: PARASOL-like mono-directional reflectance
+  units: fraction
+- name: RHO_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Air Density
+  units: kg/m3
+- name: RHREFHT
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Reference height relative humidity
+  units: fraction
+- name: RIMTEND_CLUBB
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Cloud Ice Tendency
+  units: g/kg /s
+- name: RTP2_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Moisture Variance
+  units: g^2/kg^2
+- name: RTPTHLP_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Temp. Moist. Covariance
+  units: K g/kg
+- name: RVMTEND_CLUBB
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Water vapor tendency
+  units: g/kg /s
+- name: SAD_AERO
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: aerosol surface area density
+  units: cm2/cm3
+- name: SAD_ICE
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: water-ice aerosol SAD
+  units: cm2/cm3
+- name: SAD_LNAT
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: large-mode NAT aerosol SAD
+  units: cm2/cm3
+- name: SAD_SULFC
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: chemical sulfate aerosol SAD
+  units: cm2/cm3
+- name: SAD_TROP
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: tropospheric aerosol SAD
+  units: cm2/cm3
+- name: SFCO2
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: CO2 surface flux
+  units: kg/m2/s
+- name: SFCO2_FFF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: CO2_FFF surface flux
+  units: kg/m2/s
+- name: SFCO2_LND
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: CO2_LND surface flux
+  units: kg/m2/s
+- name: SFCO2_OCN
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: CO2_OCN surface flux
+  units: kg/m2/s
+- name: SFDMS
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: DMS surface flux
+  units: kg/m2/s
+- name: SFH2O2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: H2O2 surface flux
+  units: kg/m2/s
+- name: SFH2SO4
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: H2SO4 surface flux
+  units: kg/m2/s
+- name: SFSO2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: SO2 surface flux
+  units: kg/m2/s
+- name: SFSOAG
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: SOAG surface flux
+  units: kg/m2/s
+- name: SFbc_a1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: bc_a1 surface flux
+  units: kg/m2/s
+- name: SFbc_a4
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: bc_a4 surface flux
+  units: kg/m2/s
+- name: SFdst_a1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_a1 surface flux
+  units: kg/m2/s
+- name: SFdst_a2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_a2 surface flux
+  units: kg/m2/s
+- name: SFdst_a3
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_a3 surface flux
+  units: kg/m2/s
+- name: SFncl_a1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: ncl_a1 surface flux
+  units: kg/m2/s
+- name: SFncl_a2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: ncl_a2 surface flux
+  units: kg/m2/s
+- name: SFncl_a3
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: ncl_a3 surface flux
+  units: kg/m2/s
+- name: SFnum_a1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a1 surface flux
+  units: 1/m2/s
+- name: SFnum_a2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a2 surface flux
+  units: 1/m2/s
+- name: SFnum_a3
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a3 surface flux
+  units: 1/m2/s
+- name: SFnum_a4
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a4 surface flux
+  units: 1/m2/s
+- name: SFpom_a1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: pom_a1 surface flux
+  units: kg/m2/s
+- name: SFpom_a4
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: pom_a4 surface flux
+  units: kg/m2/s
+- name: SFso4_a1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a1 surface flux
+  units: kg/m2/s
+- name: SFso4_a2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a2 surface flux
+  units: kg/m2/s
+- name: SFso4_a3
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a3 surface flux
+  units: kg/m2/s
+- name: SFsoa_a1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: soa_a1 surface flux
+  units: kg/m2/s
+- name: SFsoa_a2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: soa_a2 surface flux
+  units: kg/m2/s
+- name: SHFLX
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Surface sensible heat flux
+  units: W/m2
+- name: SL
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Liquid water static energy
+  units: J/kg
+- name: SNOWHICE
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Snow depth over ice
+  units: m
+- name: SNOWHLND
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Water equivalent snow depth
+  units: m
+- name: SNOWQM
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Grid box averaged snow amount
+  units: kg/kg
+- name: SO2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: SO2 concentration
+  units: mol/mol
+- name: SO2_CHML
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: chemical loss rate
+  units: /cm3/s
+- name: SO2_CHMP
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: chemical production rate
+  units: /cm3/s
+- name: SO2_CLXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for SO2
+  units: molec/cm2/s
+- name: SO2_CMXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for SO2
+  units: kg/m2/s
+- name: SO2_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: SO2 in bottom layer
+  units: mol/mol
+- name: SO2_XFRC
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: external forcing for SO2
+  units: molec/cm3/s
+- name: SOAG
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: SOAG concentration
+  units: mol/mol
+- name: SOAG_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: SOAG in bottom layer
+  units: mol/mol
+- name: SOLIN
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Solar insolation
+  units: W/m2
+- name: SOLLD
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Solar downward near infrared diffuse to surface
+  units: W/m2
+- name: SOLSD
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Solar downward visible diffuse to surface
+  units: W/m2
+- name: SSAVIS
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol single-scatter albedo day only
+  units: no units
+- name: SST
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: sea surface temperature
+  units: K
+- name: STEND_CLUBB
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Temperature tendency
+  units: k/s
+- name: SWCF
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Shortwave cloud forcing
+  units: W/m2
+- name: T
+  dims: [time, lev, lat, lon]
+  streams: {day_1: std, hour_6: MOAR, month_1: std}
+  long_name: Temperature
+  units: K
+- name: T010
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Temperature at 10 mbar pressure surface
+  units: K
+- name: T200
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Temperature at 200 mbar pressure surface
+  units: K
+- name: T500
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Temperature at 500 mbar pressure surface
+  units: K
+- name: T700
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Temperature at 700 mbar pressure surface
+  units: K
+- name: T850
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Temperature at 850 mbar pressure surface
+  units: K
+- name: TAQ
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Q horz+vert+fixer tendency
+  units: kg/kg/s
+- name: TAUBLJX
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Zonal integrated drag from Beljaars SGO
+  units: N/m2
+- name: TAUBLJY
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Meridional integrated drag from Beljaars SGO
+  units: N/m2
+- name: TAUGWX
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Zonal gravity wave surface stress
+  units: N/m2
+- name: TAUGWY
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Meridional gravity wave surface stress
+  units: N/m2
+- name: TAUILOGMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Ice Cloud Optical Thickness (Log10 Mean) times CLIMODIS
+  units: '1'
+- name: TAUIMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Ice Cloud Optical Thickness times CLIMODIS
+  units: '1'
+- name: TAUTLOGMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Total Cloud Optical Thickness (Log10 Mean) times CLTMODIS
+  units: '1'
+- name: TAUTMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Total Cloud Optical Thickness times CLTMODIS
+  units: '1'
+- name: TAUWLOGMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Liquid Cloud Optical Thickness (Log10 Mean) times CLWMODIS
+  units: '1'
+- name: TAUWMODIS
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: MODIS Liquid Cloud Optical Thickness times CLWMODIS
+  units: '1'
+- name: TAUX
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Zonal surface stress
+  units: N/m2
+- name: TAUY
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Meridional surface stress
+  units: N/m2
+- name: TBRY
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: total Br (ORG+INORG) volume mixing ratio
+  units: mol/mol
+- name: TCLY
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: total Cl (ORG+INORG) volume mixing ratio
+  units: mol/mol
+- name: TGCLDCWP
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Total grid-box cloud water path (liquid and ice)
+  units: kg/m2
+- name: TGCLDIWP
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Total grid-box cloud ice water path
+  units: kg/m2
+- name: TGCLDLWP
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Total grid-box cloud liquid water path
+  units: kg/m2
+- name: TH
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Potential Temperature
+  units: K
+- name: THLP2_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Temperature Variance
+  units: K^2
+- name: THzm
+  dims: [time, ilev, lat, zlon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: Zonal-Mean potential temp - defined on ilev
+  units: K
+- name: TMCO2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: CO2 column burden
+  units: kg/m2
+- name: TMCO2_FFF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: CO2_FFF column burden
+  units: kg/m2
+- name: TMCO2_LND
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: CO2_LND column burden
+  units: kg/m2
+- name: TMCO2_OCN
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: CO2_OCN column burden
+  units: kg/m2
+- name: TMDMS
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: DMS column burden
+  units: kg/m2
+- name: TMQ
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_6: MOAR, month_1: std}
+  long_name: Total (vertically integrated) precipitable water
+  units: kg/m2
+- name: TMSO2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: SO2 column burden
+  units: kg/m2
+- name: TMso4_a1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a1 column burden
+  units: kg/m2
+- name: TMso4_a2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a2 column burden
+  units: kg/m2
+- name: TMso4_a3
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a3 column burden
+  units: kg/m2
+- name: TOTH
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: total H2 volume mixing ratio
+  units: mol/mol
+- name: TOT_CLD_VISTAU
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Total gbx cloud extinction visible sw optical depth
+  units: '1'
+- name: TREFHT
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Reference height temperature
+  units: K
+- name: TREFHTMN
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Minimum reference height temperature over output period
+  units: K
+- name: TREFHTMX
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Maximum reference height temperature over output period
+  units: K
+- name: TROP_P
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Tropopause Pressure
+  units: Pa
+- name: TROP_T
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Tropopause Temperature
+  units: K
+- name: TROP_Z
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Tropopause Height
+  units: m
+- name: TS
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_6: MOAR, month_1: std}
+  long_name: Surface temperature (radiative)
+  units: K
+- name: TSMN
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Minimum surface temperature over output period
+  units: K
+- name: TSMX
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Maximum surface temperature over output period
+  units: K
+- name: TTEND_TOT
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Total temperature tendency
+  units: K/s
+- name: TTGWORO
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: T tendency - orographic gravity wave drag
+  units: K/s
+- name: U
+  dims: [time, lev, lat, lon]
+  streams: {day_1: std, hour_6: MOAR, month_1: std}
+  long_name: Zonal wind
+  units: m/s
+- name: U010
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Zonal wind at 10 mbar pressure surface
+  units: m/s
+- name: U10
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: 10m wind speed
+  units: m/s
+- name: U200
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_6: std}
+  long_name: Zonal wind at 200 mbar pressure surface
+  units: m/s
+- name: U500
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Zonal wind at 500 mbar pressure surface
+  units: m/s
+- name: U700
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Zonal wind at 700 mbar pressure surface
+  units: m/s
+- name: U850
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_6: std}
+  long_name: Zonal wind at 850 mbar pressure surface
+  units: m/s
+- name: UBOT
+  dims: [time, lat, lon]
+  streams: {hour_3: MOAR, hour_6: std}
+  long_name: Lowest model level zonal wind
+  units: m/s
+- name: UM_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Zonal Wind
+  units: m/s
+- name: UP2_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Zonal Velocity Variance
+  units: m2/s2
+- name: UPWP_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Zonal Momentum Flux
+  units: m2/s2
+- name: UTEND_CLUBB
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: U-wind Tendency
+  units: m/s /s
+- name: UTGWORO
+  dims: [time, lev, lat, lon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: U tendency - orographic gravity wave drag
+  units: m/s2
+- name: UU
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Zonal velocity squared
+  units: m2/s2
+- name: UV
+  dims: [time, lev, lat, lon]
+  streams: {day_1: std}
+  long_name: Momentum Flux
+  units: UNKNOWN
+- name: UVzm
+  dims: [time, ilev, lat, zlon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: 'Meridional Flux of Zonal Momentum: 3D zon. mean'
+  units: M2/S2
+- name: UWzm
+  dims: [time, ilev, lat, zlon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: 'Vertical Flux of Zonal Momentum: 3D zon. mean'
+  units: M2/S2
+- name: Uzm
+  dims: [time, ilev, lat, zlon]
+  streams: {day_1: MOAR, month_1: std}
+  long_name: Zonal-Mean zonal wind - defined on ilev
+  units: M/S
+- name: V
+  dims: [time, lev, lat, lon]
+  streams: {day_1: std, hour_6: MOAR, month_1: std}
+  long_name: Meridional wind
+  units: m/s
+- name: V010
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Meridional wind at 10 mbar pressure surface
+  units: m/s
+- name: V200
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Meridional wind at 200 mbar pressure surface
+  units: m/s
+- name: V500
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Meridional wind at 500 mbar pressure surface
+  units: m/s
+- name: V700
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Meridional wind at 700 mbar pressure surface
+  units: m/s
+- name: V850
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_6: std}
+  long_name: Meridional wind at 850 mbar pressure surface
+  units: m/s
+- name: VBOT
+  dims: [time, lat, lon]
+  streams: {hour_3: MOAR, hour_6: std}
+  long_name: Lowest model level meridional wind
+  units: m/s
+- name: VD01
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Vertical diffusion of Q
+  units: kg/kg/s
+- name: VM_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Meridional Wind
+  units: m/s
+- name: VP2_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Meridional Velocity Variance
+  units: m2/s2
+- name: VPWP_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Meridional Momentum Flux
+  units: m2/s2
+- name: VQ
+  dims: [time, lev, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Meridional water transport
+  units: m/skg/kg
+- name: VT
+  dims: [time, lev, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Meridional heat transport
+  units: K m/s
+- name: VTEND_CLUBB
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: V-wind Tendency
+  units: m/s /s
+- name: VTHzm
+  dims: [time, ilev, lat, zlon]
+  streams: {day_1: std, month_1: std}
+  long_name: 'Meridional Heat Flux: 3D zon. mean'
+  units: MK/S
+- name: VU
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Meridional flux of zonal momentum
+  units: m2/s2
+- name: VV
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Meridional velocity squared
+  units: m2/s2
+- name: VZ
+  dims: [time, lev, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Meridional transport of geopotential energy
+  units: m2/s
+- name: Vzm
+  dims: [time, ilev, lat, zlon]
+  streams: {day_1: std, month_1: std}
+  long_name: Zonal-Mean meridional wind - defined on ilev
+  units: M/S
+- name: WD_H2O2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertical integrated wet deposition flux
+  units: kg/m2/s
+- name: WD_H2SO4
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertical integrated wet deposition flux
+  units: kg/m2/s
+- name: WD_SO2
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertical integrated wet deposition flux
+  units: kg/m2/s
+- name: WP2_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Vertical Velocity Variance
+  units: m2/s2
+- name: WP3_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Third Moment Vertical Velocity
+  units: m3/s3
+- name: WPRCP_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Liquid Water Flux
+  units: W/m2
+- name: WPRTP_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Moisture Flux
+  units: W/m2
+- name: WPTHLP_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Heat Flux
+  units: W/m2
+- name: WPTHVP_CLUBB
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Buoyancy Flux
+  units: W/m2
+- name: WSPDSRFAV
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Horizontal total wind speed average at the surface
+  units: m/s
+- name: WSPDSRFMX
+  dims: [time, lat, lon]
+  streams: {day_1: std, month_1: std}
+  long_name: Horizontal total wind speed maximum at the surface
+  units: m/s
+- name: WSUB
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Diagnostic sub-grid vertical velocity
+  units: m/s
+- name: WTHzm
+  dims: [time, ilev, lat, zlon]
+  streams: {month_1: std}
+  long_name: 'Vertical Heat Flux: 3D zon. mean'
+  units: MK/S
+- name: Wzm
+  dims: [time, ilev, lat, zlon]
+  streams: {day_1: std, month_1: std}
+  long_name: Zonal-Mean vertical wind - defined on ilev
+  units: M/S
+- name: Z050
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Geopotential Z at 50 mbar pressure surface
+  units: m
+- name: Z200
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Geopotential Z at 200 mbar pressure surface
+  units: m
+- name: Z3
+  dims: [time, lev, lat, lon]
+  streams: {day_1: std, hour_6: MOAR, month_1: std}
+  long_name: Geopotential Height (above sea level)
+  units: m
+- name: Z300
+  dims: [time, lat, lon]
+  streams: {hour_6: std}
+  long_name: Geopotential height at 300 mbar pressure surface
+  units: m
+- name: Z500
+  dims: [time, lat, lon]
+  streams: {day_1: std, hour_6: std}
+  long_name: Geopotential Z at 500 mbar pressure surface
+  units: m
+- name: Z700
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Geopotential Z at 700 mbar pressure surface
+  units: m
+- name: Z850
+  dims: [time, lat, lon]
+  streams: {day_1: std}
+  long_name: Geopotential Z at 850 mbar pressure surface
+  units: m
+- name: ZMDQ
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Q tendency - Zhang-McFarlane moist convection
+  units: kg/kg/s
+- name: ZMDT
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: T tendency - Zhang-McFarlane moist convection
+  units: K/s
+- name: ZMMTT
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: T tendency - ZM convective momentum transport
+  units: K/s
+- name: ZMMU
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: ZM convection updraft mass flux
+  units: kg/m2/s
+- name: ZM_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Momentum Heights
+  units: m
+- name: ZT_CLUBB
+  dims: [time, ilev, lat, lon]
+  streams: {month_1: std}
+  long_name: Thermodynamic Heights
+  units: m
+- name: ac_CO2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: aircraft emission ac_CO2
+  units: kg m-2 s-1
+- name: bc_a1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: bc_a1 concentration
+  units: kg/kg
+- name: bc_a1DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: bc_a1 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: bc_a1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: bc_a1_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: bc_a1 in bottom layer
+  units: kg/kg
+- name: bc_a4
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: bc_a4 concentration
+  units: kg/kg
+- name: bc_a4DDF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: bc_a4 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: bc_a4SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: bc_a4_CLXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for bc_a4
+  units: molec/cm2/s
+- name: bc_a4_CMXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for bc_a4
+  units: kg/m2/s
+- name: bc_a4_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: bc_a4 in bottom layer
+  units: kg/kg
+- name: bc_c1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: bc_c1 in cloud water
+  units: kg/kg
+- name: bc_c1DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: bc_c1 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: bc_c1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: bc_c1 wet deposition flux at surface
+  units: kg/m2/s
+- name: bc_c4
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: bc_c4 in cloud water
+  units: kg/kg
+- name: bc_c4DDF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: bc_c4 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: bc_c4SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: bc_c4 wet deposition flux at surface
+  units: kg/m2/s
+- name: dgnumwet1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol mode wet diameter
+  units: m
+- name: dgnumwet2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol mode wet diameter
+  units: m
+- name: dgnumwet3
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: Aerosol mode wet diameter
+  units: m
+- name: dry_deposition_NHx_as_N
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: NHx dry deposition flux
+  units: kg/m2/s
+- name: dry_deposition_NOy_as_N
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: NOy dry deposition flux
+  units: kg/m2/s
+- name: dst_a1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_a1 concentration
+  units: kg/kg
+- name: dst_a1DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: dst_a1 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: dst_a1SF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_a1 dust surface emission
+  units: kg/m2/s
+- name: dst_a1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: dst_a1_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_a1 in bottom layer
+  units: kg/kg
+- name: dst_a2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_a2 concentration
+  units: kg/kg
+- name: dst_a2DDF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_a2 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: dst_a2SF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_a2 dust surface emission
+  units: kg/m2/s
+- name: dst_a2SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: dst_a2_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_a2 in bottom layer
+  units: kg/kg
+- name: dst_a3
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_a3 concentration
+  units: kg/kg
+- name: dst_a3DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: dst_a3 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: dst_a3SF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_a3 dust surface emission
+  units: kg/m2/s
+- name: dst_a3SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: dst_a3_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_a3 in bottom layer
+  units: kg/kg
+- name: dst_c1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: dst_c1 in cloud water
+  units: kg/kg
+- name: dst_c1DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: dst_c1 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: dst_c1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: dst_c1 wet deposition flux at surface
+  units: kg/m2/s
+- name: dst_c2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_c2 in cloud water
+  units: kg/kg
+- name: dst_c2DDF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_c2 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: dst_c2SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: dst_c2 wet deposition flux at surface
+  units: kg/m2/s
+- name: dst_c3
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: dst_c3 in cloud water
+  units: kg/kg
+- name: dst_c3DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: dst_c3 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: dst_c3SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: dst_c3 wet deposition flux at surface
+  units: kg/m2/s
+- name: jh2o2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: photolysis rate constant
+  units: /s
+- name: ncl_a1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: ncl_a1 concentration
+  units: kg/kg
+- name: ncl_a1DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: ncl_a1 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: ncl_a1SF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: ncl_a1 seasalt surface emission
+  units: kg/m2/s
+- name: ncl_a1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: ncl_a1_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: ncl_a1 in bottom layer
+  units: kg/kg
+- name: ncl_a2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: ncl_a2 concentration
+  units: kg/kg
+- name: ncl_a2DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: ncl_a2 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: ncl_a2SF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: ncl_a2 seasalt surface emission
+  units: kg/m2/s
+- name: ncl_a2SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: ncl_a2_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: ncl_a2 in bottom layer
+  units: kg/kg
+- name: ncl_a3
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: ncl_a3 concentration
+  units: kg/kg
+- name: ncl_a3DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: ncl_a3 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: ncl_a3SF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: ncl_a3 seasalt surface emission
+  units: kg/m2/s
+- name: ncl_a3SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: ncl_a3_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: ncl_a3 in bottom layer
+  units: kg/kg
+- name: ncl_c1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: ncl_c1 in cloud water
+  units: kg/kg
+- name: ncl_c1DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: ncl_c1 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: ncl_c1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: ncl_c1 wet deposition flux at surface
+  units: kg/m2/s
+- name: ncl_c2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: ncl_c2 in cloud water
+  units: kg/kg
+- name: ncl_c2DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: ncl_c2 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: ncl_c2SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: ncl_c2 wet deposition flux at surface
+  units: kg/m2/s
+- name: ncl_c3
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: ncl_c3 in cloud water
+  units: kg/kg
+- name: ncl_c3DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: ncl_c3 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: ncl_c3SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: ncl_c3 wet deposition flux at surface
+  units: kg/m2/s
+- name: num_a1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a1 concentration
+  units: 1/kg
+- name: num_a1DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: num_a1 dry deposition flux at bottom (grav+turb)
+  units: 1/m2/s
+- name: num_a1SF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a1 dust surface emission
+  units: kg/m2/s
+- name: num_a1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: 1/m2/s
+- name: num_a1_CLXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for num_a1
+  units: molec/cm2/s
+- name: num_a1_CMXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for num_a1
+  units: kg/m2/s
+- name: num_a1_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a1 in bottom layer
+  units: 1/kg
+- name: num_a2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a2 concentration
+  units: 1/kg
+- name: num_a2DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: num_a2 dry deposition flux at bottom (grav+turb)
+  units: 1/m2/s
+- name: num_a2SF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a2 dust surface emission
+  units: kg/m2/s
+- name: num_a2SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: 1/m2/s
+- name: num_a2_CLXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for num_a2
+  units: molec/cm2/s
+- name: num_a2_CMXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for num_a2
+  units: kg/m2/s
+- name: num_a2_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a2 in bottom layer
+  units: 1/kg
+- name: num_a2_sfnnuc1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a2 modal_aero new particle nucleation column tendency
+  units: '#/m2/s'
+- name: num_a3
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a3 concentration
+  units: 1/kg
+- name: num_a3DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: num_a3 dry deposition flux at bottom (grav+turb)
+  units: 1/m2/s
+- name: num_a3SF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a3 dust surface emission
+  units: kg/m2/s
+- name: num_a3SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: 1/m2/s
+- name: num_a3_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a3 in bottom layer
+  units: 1/kg
+- name: num_a4
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a4 concentration
+  units: 1/kg
+- name: num_a4DDF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a4 dry deposition flux at bottom (grav+turb)
+  units: 1/m2/s
+- name: num_a4SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Wet deposition flux at surface
+  units: 1/m2/s
+- name: num_a4_CLXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for num_a4
+  units: molec/cm2/s
+- name: num_a4_CMXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for num_a4
+  units: kg/m2/s
+- name: num_a4_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_a4 in bottom layer
+  units: 1/kg
+- name: num_c1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: num_c1 in cloud water
+  units: 1/kg
+- name: num_c1DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: num_c1 dry deposition flux at bottom (grav+turb)
+  units: 1/m2/s
+- name: num_c1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: num_c1 wet deposition flux at surface
+  units: 1/m2/s
+- name: num_c2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: num_c2 in cloud water
+  units: 1/kg
+- name: num_c2DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: num_c2 dry deposition flux at bottom (grav+turb)
+  units: 1/m2/s
+- name: num_c2SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: num_c2 wet deposition flux at surface
+  units: 1/m2/s
+- name: num_c3
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: num_c3 in cloud water
+  units: 1/kg
+- name: num_c3DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: num_c3 dry deposition flux at bottom (grav+turb)
+  units: 1/m2/s
+- name: num_c3SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: num_c3 wet deposition flux at surface
+  units: 1/m2/s
+- name: num_c4
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: num_c4 in cloud water
+  units: 1/kg
+- name: num_c4DDF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_c4 dry deposition flux at bottom (grav+turb)
+  units: 1/m2/s
+- name: num_c4SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: num_c4 wet deposition flux at surface
+  units: 1/m2/s
+- name: pom_a1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: pom_a1 concentration
+  units: kg/kg
+- name: pom_a1DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: pom_a1 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: pom_a1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: pom_a1_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: pom_a1 in bottom layer
+  units: kg/kg
+- name: pom_a4
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: pom_a4 concentration
+  units: kg/kg
+- name: pom_a4DDF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: pom_a4 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: pom_a4SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: pom_a4_CLXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for pom_a4
+  units: molec/cm2/s
+- name: pom_a4_CMXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for pom_a4
+  units: kg/m2/s
+- name: pom_a4_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: pom_a4 in bottom layer
+  units: kg/kg
+- name: pom_c1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: pom_c1 in cloud water
+  units: kg/kg
+- name: pom_c1DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: pom_c1 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: pom_c1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: pom_c1 wet deposition flux at surface
+  units: kg/m2/s
+- name: pom_c4
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: pom_c4 in cloud water
+  units: kg/kg
+- name: pom_c4DDF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: pom_c4 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: pom_c4SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: pom_c4 wet deposition flux at surface
+  units: kg/m2/s
+- name: so4_a1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a1 concentration
+  units: kg/kg
+- name: so4_a1DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: so4_a1 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: so4_a1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: so4_a1_CHMP
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: chemical production rate
+  units: /cm3/s
+- name: so4_a1_CLXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for so4_a1
+  units: molec/cm2/s
+- name: so4_a1_CMXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for so4_a1
+  units: kg/m2/s
+- name: so4_a1_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a1 in bottom layer
+  units: kg/kg
+- name: so4_a1_sfgaex1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a1 gas-aerosol-exchange primary column tendency
+  units: kg/m2/s
+- name: so4_a2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a2 concentration
+  units: kg/kg
+- name: so4_a2DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: so4_a2 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: so4_a2SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: so4_a2_CHMP
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: chemical production rate
+  units: /cm3/s
+- name: so4_a2_CLXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for so4_a2
+  units: molec/cm2/s
+- name: so4_a2_CMXF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: vertically intergrated external forcing for so4_a2
+  units: kg/m2/s
+- name: so4_a2_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a2 in bottom layer
+  units: kg/kg
+- name: so4_a2_sfgaex1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a2 gas-aerosol-exchange primary column tendency
+  units: kg/m2/s
+- name: so4_a2_sfnnuc1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a2 modal_aero new particle nucleation column tendency
+  units: kg/m2/s
+- name: so4_a3
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a3 concentration
+  units: kg/kg
+- name: so4_a3DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: so4_a3 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: so4_a3SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: so4_a3_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a3 in bottom layer
+  units: kg/kg
+- name: so4_a3_sfgaex1
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_a3 gas-aerosol-exchange primary column tendency
+  units: kg/m2/s
+- name: so4_c1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: so4_c1 in cloud water
+  units: kg/kg
+- name: so4_c1AQH2SO4
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_c1 aqueous phase chemistry
+  units: kg/m2/s
+- name: so4_c1AQSO4
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_c1 aqueous phase chemistry
+  units: kg/m2/s
+- name: so4_c1DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: so4_c1 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: so4_c1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: so4_c1 wet deposition flux at surface
+  units: kg/m2/s
+- name: so4_c2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: so4_c2 in cloud water
+  units: kg/kg
+- name: so4_c2AQH2SO4
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_c2 aqueous phase chemistry
+  units: kg/m2/s
+- name: so4_c2AQSO4
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_c2 aqueous phase chemistry
+  units: kg/m2/s
+- name: so4_c2DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: so4_c2 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: so4_c2SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: so4_c2 wet deposition flux at surface
+  units: kg/m2/s
+- name: so4_c3
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: so4_c3 in cloud water
+  units: kg/kg
+- name: so4_c3AQH2SO4
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_c3 aqueous phase chemistry
+  units: kg/m2/s
+- name: so4_c3AQSO4
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: so4_c3 aqueous phase chemistry
+  units: kg/m2/s
+- name: so4_c3DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: so4_c3 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: so4_c3SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: so4_c3 wet deposition flux at surface
+  units: kg/m2/s
+- name: soa_a1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: soa_a1 concentration
+  units: kg/kg
+- name: soa_a1DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: soa_a1 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: soa_a1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: soa_a1_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: soa_a1 in bottom layer
+  units: kg/kg
+- name: soa_a2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: std}
+  long_name: soa_a2 concentration
+  units: kg/kg
+- name: soa_a2DDF
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: soa_a2 dry deposition flux at bottom (grav+turb)
+  units: kg/m2/s
+- name: soa_a2SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: Wet deposition flux at surface
+  units: kg/m2/s
+- name: soa_a2_SRF
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: soa_a2 in bottom layer
+  units: kg/kg
+- name: soa_c1
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: soa_c1 in cloud water
+  units: kg/kg
+- name: soa_c1SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: soa_c1 wet deposition flux at surface
+  units: kg/m2/s
+- name: soa_c2
+  dims: [time, lev, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: soa_c2 in cloud water
+  units: kg/kg
+- name: soa_c2SFWET
+  dims: [time, lat, lon]
+  streams: {month_1: MOAR}
+  long_name: soa_c2 wet deposition flux at surface
+  units: kg/m2/s
+- name: uIVT
+  dims: [time, lat, lon]
+  streams: {hour_6: MOAR}
+  long_name: UNKNOWN
+  units: UNKNOWN
+- name: vIVT
+  dims: [time, lat, lon]
+  streams: {hour_6: MOAR}
+  long_name: UNKNOWN
+  units: UNKNOWN
+- name: wet_deposition_NHx_as_N
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: NHx wet deposition
+  units: kg/m2/s
+- name: wet_deposition_NOy_as_N
+  dims: [time, lat, lon]
+  streams: {month_1: std}
+  long_name: NOy wet deposition
+  units: kg/m2/s

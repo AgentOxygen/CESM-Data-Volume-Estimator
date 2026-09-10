@@ -1,0 +1,8 @@
+# Exists so the volume mount and port are never retyped. See the Makefile.
+services:
+  dev:
+    build: .
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"

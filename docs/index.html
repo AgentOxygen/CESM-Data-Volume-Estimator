@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CESM Data Volume Estimator</title>
+<style>
+  :root { --line: #d8dce2; --muted: #666; --bg: #fff; --head: #f6f7f9; --accent: #1a5fb4; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+         color: #1a1a1a; background: var(--bg); }
+  header { position: sticky; top: 0; background: var(--head); border-bottom: 1px solid var(--line);
+           padding: 12px 16px; z-index: 2; }
+  h1 { font-size: 16px; margin: 0 0 10px; font-weight: 600; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .controls label { font-size: 12px; color: var(--muted); }
+  select, input { font: inherit; padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; }
+  input[type=number] { width: 6em; }
+  input[type=search] { width: 14em; }
+  button { font: inherit; padding: 4px 10px; border: 1px solid var(--line);
+           border-radius: 4px; background: #fff; cursor: pointer; }
+  button:hover { background: #eef2f7; }
+  .totals { display: flex; gap: 28px; margin-top: 10px; align-items: baseline; }
+  .totals b { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .totals span { font-size: 12px; color: var(--muted); }
+  .note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  main { padding: 8px 16px 60px; }
+  details { border-bottom: 1px solid var(--line); }
+  summary { cursor: pointer; padding: 8px 4px; font-weight: 600; display: flex;
+            justify-content: space-between; }
+  summary .sub { font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; }
+  td { padding: 2px 6px; border-top: 1px solid #f0f1f3; vertical-align: top; }
+  td.sz { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.nm { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
+  td.st { color: var(--muted); white-space: nowrap; }
+  td.dm { color: var(--muted); white-space: nowrap;
+          font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  td.ln { color: var(--muted); width: 100%; }
+  tr.off { opacity: .35; }
+  tr.hide { display: none; }
+  .approx { color: #b06000; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>CESM Data Volume Estimator</h1>
+  <div class="controls">
+    <label>Configuration <select id="config"></select></label>
+    <label>Years <input type="number" id="years" value="100" min="1" step="1"></label>
+    <label>Filter <input type="search" id="filter" placeholder="name or description"></label>
+    <button data-preset="std">LENS2 std</button>
+    <button data-preset="MOAR">LENS2 MOAR</button>
+    <button data-preset="">Clear</button>
+  </div>
+  <div class="totals">
+    <div><b id="total">0 TB</b> <span>total</span></div>
+    <div><b id="peryear">0 TB</b> <span>per simulated year</span></div>
+    <div><span id="count">0 selected</span></div>
+  </div>
+  <div class="note" id="note">Raw uncompressed netCDF. Compression is not modelled.</div>
+</header>
+
+<main id="main">Loading&hellip;</main>
+
+<script>
+const TB = 1e12;
+let B, rows = [], selected = new Set();
+
+const fmt = (b) => {
+  if (b >= TB) return (b / TB).toFixed(2) + " TB";
+  if (b >= 1e9) return (b / 1e9).toFixed(1) + " GB";
+  if (b >= 1e6) return (b / 1e6).toFixed(1) + " MB";
+  return (b / 1e3).toFixed(1) + " KB";
+};
+
+const configIdx = () => document.getElementById("config").selectedIndex;
+const years = () => Math.max(1, +document.getElementById("years").value || 1);
+
+// Bytes per simulated year for one (variable, stream) row on the current config.
+// null when the variable does not exist on that configuration.
+function perYear(row) {
+  const b = B.vars[row.v].b[configIdx()];
+  return b === null ? null : b * B.streams[row.s].per_year;
+}
+
+function render() {
+  const parts = [];
+  for (const c of B.components) {
+    const list = rows.filter(r => B.vars[r.v].c === c);
+    if (!list.length) continue;
+    parts.push(`<details data-c="${c}"><summary><span>${c}</span>` +
+               `<span class="sub"></span></summary><div class="scroll"><table><tbody>`);
+    for (const r of list) {
+      const v = B.vars[r.v];
+      parts.push(
+        `<tr data-i="${r.i}"><td><input type="checkbox" data-i="${r.i}"></td>` +
+        `<td class="st">${r.s}</td>` +
+        `<td class="nm">${v.n}${v.a ? ' <span class="approx" title="size depends on the surface dataset">&#8776;</span>' : ""}</td>` +
+        `<td class="dm">${v.d.filter(d => d !== "time").join(" ")}</td>` +
+        `<td class="ln">${v.ln}${v.u && v.u !== "no units" ? ` <em>(${v.u})</em>` : ""}</td>` +
+        `<td class="sz"></td></tr>`);
+    }
+    parts.push("</tbody></table></div></details>");
+  }
+  document.getElementById("main").innerHTML = parts.join("");
+  // Cache the row elements once; refresh() runs on every keystroke.
+  for (const tr of document.querySelectorAll("tr[data-i]")) rows[+tr.dataset.i].tr = tr;
+  refresh();
+}
+
+// Update per-row sizes, availability, and all totals for the current config.
+function refresh() {
+  const y = years();
+  let total = 0, approx = false;
+  const subtotal = {};
+  for (const r of rows) {
+    const tr = r.tr;
+    const py = perYear(r);
+    const box = tr.firstElementChild.firstElementChild;
+    tr.classList.toggle("off", py === null);
+    box.disabled = py === null;
+    box.checked = selected.has(r.i) && py !== null;
+    tr.lastElementChild.textContent = py === null ? "n/a" : fmt(py) + "/yr";
+    if (box.checked) {
+      const c = B.vars[r.v].c;
+      subtotal[c] = (subtotal[c] || 0) + py;
+      total += py;
+      if (B.vars[r.v].a) approx = true;
+    }
+  }
+  for (const d of document.querySelectorAll("details")) {
+    const s = subtotal[d.dataset.c] || 0;
+    d.querySelector(".sub").textContent = s ? fmt(s) + "/yr" : "";
+  }
+  document.getElementById("total").textContent = fmt(total * y);
+  document.getElementById("peryear").textContent = fmt(total);
+  document.getElementById("count").textContent =
+    `${[...selected].filter(i => perYear(rows[i]) !== null).length} selected`;
+  document.getElementById("note").textContent =
+    "Raw uncompressed netCDF. Compression is not modelled." +
+    (approx ? "  ≈ marks variables on CTSM subgrid dimensions, whose sizes" +
+              " depend on the surface dataset and are estimates." : "");
+}
+
+function applyFilter() {
+  const q = document.getElementById("filter").value.trim().toLowerCase();
+  for (const r of rows) {
+    const v = B.vars[r.v];
+    const hit = !q || v.n.toLowerCase().includes(q) || v.ln.toLowerCase().includes(q);
+    r.tr.classList.toggle("hide", !hit);
+  }
+}
+
+// LENS2 tiers are cumulative: a MOAR member writes everything a std member
+// does, plus extras.
+function preset(tier) {
+  selected = new Set();
+  if (tier) {
+    for (const r of rows) {
+      const t = B.vars[r.v].s[r.s];
+      if (t === "std" || t === tier) selected.add(r.i);
+    }
+  }
+  refresh();
+}
+
+fetch("data.json").then(r => r.json()).then(data => {
+  B = data;
+  document.getElementById("config").innerHTML =
+    B.configs.map(c => `<option>${c.label}</option>`).join("");
+  // One row per (variable, stream) pair -- the unit a modeler actually selects.
+  B.vars.forEach((v, vi) => {
+    for (const s of Object.keys(v.s)) rows.push({ i: rows.length, v: vi, s });
+  });
+  render();
+
+  document.getElementById("main").addEventListener("change", e => {
+    const i = +e.target.dataset.i;
+    e.target.checked ? selected.add(i) : selected.delete(i);
+    refresh();
+  });
+  document.getElementById("config").addEventListener("change", refresh);
+  document.getElementById("years").addEventListener("input", refresh);
+  document.getElementById("filter").addEventListener("input", applyFilter);
+  for (const b of document.querySelectorAll("[data-preset]"))
+    b.addEventListener("click", () => preset(b.dataset.preset));
+}).catch(e => {
+  document.getElementById("main").textContent =
+    "Could not load data.json: " + e + "  (run `make build`, and serve over HTTP)";
+});
+</script>
+</body>
+</html>

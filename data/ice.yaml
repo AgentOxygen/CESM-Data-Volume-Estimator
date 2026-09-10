@@ -1,0 +1,858 @@
+# ice history fields. Seeded from reference/lens2output200129.csv, then
+# maintained by hand. See README.md -> "Add or correct a variable".
+#
+#   dims    copy verbatim from `ncdump -h`, in order, including `time`.
+#   streams <stream>: <tier>  -- which LENS2 preset the variable belongs to.
+#
+# A variable may appear twice with DIFFERENT dims (CTSM writes some fields
+# gridded in one stream and as subgrid vectors in another). Keep them separate.
+
+horiz_dims: [nj, ni]
+dtype_bytes: 4
+
+variables:
+- name: FYarea
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: first-year ice area
+  units: m2
+- name: FYarea_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: first-year ice area
+  units: m2
+- name: Tsfc
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: snow/ice surface temperature
+  units: Celsius
+- name: aice
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: ice area (aggregate)
+  units: '1'
+- name: aice_d
+  dims: [time, nj, ni]
+  streams: {day_1: std}
+  long_name: ice area (aggregate)
+  units: '1'
+- name: aicen
+  dims: [time, nc, nj, ni]
+  streams: {month_1: std}
+  long_name: ice area categories
+  units: '1'
+- name: aicen_d
+  dims: [time, nc, nj, ni]
+  streams: {day_1: std}
+  long_name: ice area categories
+  units: '1'
+- name: albsni
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: snow/ice broad band albedo
+  units: '%'
+- name: alidf_ai
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: near IR diffuse albedo
+  units: '%'
+- name: alidr_ai
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: near IR direct albedo
+  units: '%'
+- name: alvdf_ai
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: visible diffuse albedo
+  units: '%'
+- name: alvdr_ai
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: visible direct albedo
+  units: '%'
+- name: apeff_ai
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: radiation-effective pond area fraction over grid cell
+  units: '1'
+- name: apond_ai
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: melt pond fraction of grid cell
+  units: '1'
+- name: apond_ai_d
+  dims: [time, nj, ni]
+  streams: {day_1: std}
+  long_name: melt pond fraction of grid cell
+  units: '1'
+- name: ardg
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: ridged ice area fraction
+  units: '1'
+- name: congel
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: congelation ice growth
+  units: cm/day
+- name: congel_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: congelation ice growth
+  units: cm/day
+- name: dagedtd
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: age tendency dynamics
+  units: day/day
+- name: dagedtt
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: age tendency thermo
+  units: day/day
+- name: daidtd
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: area tendency dynamics
+  units: '%/day'
+- name: daidtd_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: area tendency dynamics
+  units: '%/day'
+- name: daidtt
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: area tendency thermo
+  units: '%/day'
+- name: daidtt_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: area tendency thermo
+  units: '%/day'
+- name: divu
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: strain rate (divergence)
+  units: '%/day'
+- name: dvidtd
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: volume tendency dynamics
+  units: cm/day
+- name: dvidtd_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: volume tendency dynamics
+  units: cm/day
+- name: dvidtt
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: volume tendency thermo
+  units: cm/day
+- name: dvidtt_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: volume tendency thermo
+  units: cm/day
+- name: evap
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: evaporative water flux (cpl)
+  units: cm/day
+- name: fhocn
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: heat flux ice to ocn (cpl)
+  units: W/m2
+- name: flat
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: latent heat flux (cpl)
+  units: W/m2
+- name: flat_ai
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: latent heat flux
+  units: W/m2
+- name: flwdn
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: down longwave flux
+  units: W/m2
+- name: flwup
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: upward longwave flux (cpl)
+  units: W/m2
+- name: frazil
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: frazil ice growth
+  units: cm/day
+- name: frazil_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: frazil ice growth
+  units: cm/day
+- name: fresh
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: freshwtr flx ice to ocn (cpl)
+  units: cm/day
+- name: fsalt
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: salt flux ice to ocn (cpl)
+  units: kg/m2/day
+- name: fsens
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: sensible heat flux (cpl)
+  units: W/m2
+- name: fsens_ai
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: sensible heat flux
+  units: W/m2
+- name: fswabs
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: snow/ice/ocn absorbed solar flux (cpl)
+  units: W/m2
+- name: fswabs_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: snow/ice/ocn absorbed solar flux (cpl)
+  units: W/m2
+- name: fswdn
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: down solar flux
+  units: W/m2
+- name: fswdn_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: down solar flux
+  units: W/m2
+- name: fswintn
+  dims: [time, nc, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: internal absorbed shortwave categories
+  units: W m-2
+- name: fswsfcn
+  dims: [time, nc, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: surface absorbed shortwave categories
+  units: W m-2
+- name: fswthru
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: SW thru ice to ocean (cpl)
+  units: W/m2
+- name: fswthru_d
+  dims: [time, nj, ni]
+  streams: {day_1: std}
+  long_name: SW thru ice to ocean (cpl)
+  units: W/m2
+- name: fswthrun
+  dims: [time, nc, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: penetrating shortwave categories
+  units: W m-2
+- name: fswup
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: upward solar flux
+  units: W/m2
+- name: fswup_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: upward solar flux
+  units: W/m2
+- name: hi
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: grid cell mean ice thickness
+  units: m
+- name: hi_d
+  dims: [time, nj, ni]
+  streams: {day_1: std}
+  long_name: grid cell mean ice thickness
+  units: m
+- name: hs
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: grid cell mean snow thickness
+  units: m
+- name: hs_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: grid cell mean snow thickness
+  units: m
+- name: ice_present
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: fraction of time-avg interval that ice is present
+  units: '1'
+- name: ice_present_d
+  dims: [time, nj, ni]
+  streams: {day_1: std}
+  long_name: fraction of time-avg interval that ice is present
+  units: '1'
+- name: meltb
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: basal ice melt
+  units: cm/day
+- name: meltb_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: basal ice melt
+  units: cm/day
+- name: meltl
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: lateral ice melt
+  units: cm/day
+- name: meltl_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: lateral ice melt
+  units: cm/day
+- name: melts
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: top snow melt
+  units: cm/day
+- name: melts_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: top snow melt
+  units: cm/day
+- name: meltt
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: top ice melt
+  units: cm/day
+- name: meltt_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: top ice melt
+  units: cm/day
+- name: rain
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: rainfall rate (cpl)
+  units: cm/day
+- name: rain_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: rainfall rate (cpl)
+  units: cm/day
+- name: shear
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: strain rate (shear)
+  units: '%/day'
+- name: siage
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice age
+  units: s
+- name: sialb
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice albedo
+  units: '1'
+- name: sicompstren
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: compressive sea ice strength
+  units: N m-1
+- name: sidconcdyn
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice area change from dynamics
+  units: 1/s
+- name: sidconcth
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice area change from thermodynamics
+  units: 1/s
+- name: sidmassdyn
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice mass change from dynamics
+  units: kg m-2 s-1
+- name: sidmassevapsubl
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice mass change from evaporation and sublimation
+  units: kg m-2 s-1
+- name: sidmassgrowthbot
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice mass change from basal growth
+  units: kg m-2 s-1
+- name: sidmassgrowthwat
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice mass change from frazil
+  units: kg m-2 s-1
+- name: sidmasslat
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice mass change lateral melt
+  units: kg m-2 s-1
+- name: sidmassmeltbot
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice mass change bottom melt
+  units: kg m-2 s-1
+- name: sidmassmelttop
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice mass change top melt
+  units: kg m-2 s-1
+- name: sidmasssi
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice mass change from snow-ice formation
+  units: kg m-2 s-1
+- name: sidmassth
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice mass change from thermodynamics
+  units: kg m-2 s-1
+- name: sidmasstranx
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: x component of snow and sea ice mass transport
+  units: kg/s
+- name: sidmasstrany
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: y component of snow and sea ice mass transport
+  units: kg/s
+- name: sidragtop
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: atmospheric drag over sea ice
+  units: '1'
+- name: sifb
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice freeboard above sea level
+  units: m
+- name: siflcondbot
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: conductive heat flux at bottom of sea ice
+  units: W/m2
+- name: siflcondtop
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: conductive heat flux at top of sea ice
+  units: W/m2
+- name: siflfwbot
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: fresh water flux from sea ice
+  units: kg m-2 s-1
+- name: siflfwdrain
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: fresh water drainage through sea ice
+  units: kg m-2 s-1
+- name: sifllatstop
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: latent heat flux over sea ice
+  units: W/m2
+- name: sifllwdtop
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: down longwave flux over sea ice
+  units: W/m2
+- name: sifllwutop
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: upward longwave flux over sea ice
+  units: W/m2
+- name: siflsaltbot
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: salt flux from sea ice
+  units: kg m-2 s-1
+- name: siflsenstop
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sensible heat flux over sea ice
+  units: W/m2
+- name: siflsensupbot
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sensible heat flux at bottom of sea ice
+  units: W/m2
+- name: siflswdbot
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: down shortwave flux at bottom of ice
+  units: W/m2
+- name: siflswdtop
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: down shortwave flux over sea ice
+  units: W/m2
+- name: siflswutop
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: upward shortwave flux over sea ice
+  units: W/m2
+- name: siforcecoriolx
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: coriolis term
+  units: N m-2
+- name: siforcecorioly
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: coriolis term
+  units: N m-2
+- name: siforceintstrx
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: internal stress term
+  units: N m-2
+- name: siforceintstry
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: internal stress term
+  units: N m-2
+- name: siforcetiltx
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea surface tilt term
+  units: N m-2
+- name: siforcetilty
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea surface tile term
+  units: N m-2
+- name: sig1
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: norm. principal stress 1
+  units: '1'
+- name: sig2
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: norm. principal stress 2
+  units: '1'
+- name: sihc
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice heat content
+  units: J m-2
+- name: siitdconc
+  dims: [time, nc, nj, ni]
+  streams: {month_1: std}
+  long_name: ice area categories
+  units: '1'
+- name: siitdsnthick
+  dims: [time, nc, nj, ni]
+  streams: {month_1: std}
+  long_name: snow thickness categories
+  units: m
+- name: siitdthick
+  dims: [time, nc, nj, ni]
+  streams: {month_1: std}
+  long_name: ice thickness categories
+  units: m
+- name: sipr
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: rainfall over sea ice
+  units: kg m-2 s-1
+- name: sirdgthick
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice ridge thickness
+  units: m
+- name: sisnhc
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: snow heat content
+  units: J m-2
+- name: sisnthick
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice snow thickness
+  units: m
+- name: sisnthick_d
+  dims: [time, nj, ni]
+  streams: {day_1: std}
+  long_name: sea ice snow thickness
+  units: m
+- name: sispeed
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: ice speed
+  units: m/s
+- name: sispeed_d
+  dims: [time, nj, ni]
+  streams: {day_1: std}
+  long_name: ice speed
+  units: m/s
+- name: sistreave
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: average normal stress
+  units: N m-1
+- name: sistremax
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: maximum shear stress
+  units: N m-1
+- name: sistrxdtop
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: x component of atmospheric stress on sea ice
+  units: N m-2
+- name: sistrxubot
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: x component of ocean stress on sea ice
+  units: N m-2
+- name: sistrydtop
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: y component of atmospheric stress on sea ice
+  units: N m-2
+- name: sistryubot
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: y component of ocean stress on sea ice
+  units: N m-2
+- name: sitempbot
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice bottom temperature
+  units: K
+- name: sitempsnic
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: snow ice interface temperature
+  units: K
+- name: sitemptop
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice surface temperature
+  units: K
+- name: sitemptop_d
+  dims: [time, nj, ni]
+  streams: {day_1: std}
+  long_name: sea ice surface temperature
+  units: K
+- name: sithick
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: sea ice thickness
+  units: m
+- name: sithick_d
+  dims: [time, nj, ni]
+  streams: {day_1: std}
+  long_name: sea ice thickness
+  units: m
+- name: siu
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: ice x velocity component
+  units: m/s
+- name: siu_d
+  dims: [time, nj, ni]
+  streams: {day_1: std}
+  long_name: ice x velocity component
+  units: m/s
+- name: siv
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: ice y velocity component
+  units: m/s
+- name: siv_d
+  dims: [time, nj, ni]
+  streams: {day_1: std}
+  long_name: ice y velocity component
+  units: m/s
+- name: sndmassmelt
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: snow mass change from snow melt
+  units: kg m-2 s-1
+- name: sndmasssnf
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: snow mass change from snow fall
+  units: kg m-2 s-1
+- name: sndmassubl
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: snow mass change from evaporation and sublimation
+  units: kg m-2 s-1
+- name: snoice
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: snow-ice formation
+  units: cm/day
+- name: snoice_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: snow-ice formation
+  units: cm/day
+- name: snow
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: snowfall rate (cpl)
+  units: cm/day
+- name: snow_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: snowfall rate (cpl)
+  units: cm/day
+- name: snowfrac
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: grid cell mean snow fraction
+  units: '1'
+- name: snowfrac_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: grid cell mean snow fraction
+  units: '1'
+- name: strairx
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: atm/ice stress (x)
+  units: N/m2
+- name: strairx_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: atm/ice stress (x)
+  units: N/m2
+- name: strairy
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: atm/ice stress (y)
+  units: N/m2
+- name: strairy_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: atm/ice stress (y)
+  units: N/m2
+- name: strcorx
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: coriolis stress (x)
+  units: N/m2
+- name: strcory
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: coriolis stress (y)
+  units: N/m2
+- name: strength
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: compressive ice strength
+  units: N/m
+- name: strintx
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: internal ice stress (x)
+  units: N/m2
+- name: strintx_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: internal ice stress (x)
+  units: N/m2
+- name: strinty
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: internal ice stress (y)
+  units: N/m2
+- name: strinty_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: internal ice stress (y)
+  units: N/m2
+- name: strocnx
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: ocean/ice stress (x)
+  units: N/m2
+- name: strocnx_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: ocean/ice stress (x)
+  units: N/m2
+- name: strocny
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: ocean/ice stress (y)
+  units: N/m2
+- name: strocny_d
+  dims: [time, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: ocean/ice stress (y)
+  units: N/m2
+- name: strtltx
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: sea sfc tilt stress (x)
+  units: N/m2
+- name: strtlty
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: sea sfc tilt stress (y)
+  units: N/m2
+- name: uatm
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: atm velocity (x)
+  units: m/s
+- name: uvel
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: ice velocity (x)
+  units: m/s
+- name: vatm
+  dims: [time, nj, ni]
+  streams: {month_1: std}
+  long_name: atm velocity (y)
+  units: m/s
+- name: vicen
+  dims: [time, nc, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: ice volume categories
+  units: m
+- name: vicen_d
+  dims: [time, nc, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: ice volume categories
+  units: m
+- name: vsnon
+  dims: [time, nc, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: snow depth on ice categories
+  units: m
+- name: vsnon_d
+  dims: [time, nc, nj, ni]
+  streams: {day_1: MOAR}
+  long_name: snow depth on ice categories
+  units: m
+- name: vvel
+  dims: [time, nj, ni]
+  streams: {month_1: MOAR}
+  long_name: ice velocity (y)
+  units: m/s

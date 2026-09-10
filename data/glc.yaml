@@ -1,0 +1,38 @@
+# glc history fields. Seeded from reference/lens2output200129.csv, then
+# maintained by hand. See README.md -> "Add or correct a variable".
+#
+#   dims    copy verbatim from `ncdump -h`, in order, including `time`.
+#   streams <stream>: <tier>  -- which LENS2 preset the variable belongs to.
+#
+# A variable may appear twice with DIFFERENT dims (CTSM writes some fields
+# gridded in one stream and as subgrid vectors in another). Keep them separate.
+
+horiz_dims: [y1, x1]
+dtype_bytes: 4
+
+variables:
+- name: artm
+  dims: [time, y1, x1]
+  streams: {year_1: std}
+  long_name: annual mean air temperature
+  units: degree_Celsius
+- name: smb
+  dims: [time, y1, x1]
+  streams: {year_1: std}
+  long_name: surface mass balance
+  units: mm/year water equivalent
+- name: thk
+  dims: [time, y1, x1]
+  streams: {year_1: std}
+  long_name: ice thickness
+  units: meter
+- name: topg
+  dims: [time, y1, x1]
+  streams: {year_1: std}
+  long_name: bedrock topography
+  units: meter
+- name: usurf
+  dims: [time, y1, x1]
+  streams: {year_1: std}
+  long_name: ice upper surface elevation
+  units: meter

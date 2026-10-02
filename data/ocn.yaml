@@ -10,6 +10,13 @@
 horiz_dims: [nlat, nlon]
 dtype_bytes: 4
 
+# This file is POP2 (CESM2 LENS2). CESM3's ocean is MOM6, a different model
+# with no overlapping variable names -- not "unverified," confirmed wrong.
+# `cesm2-only` says so. If a MOM6 catalogue is ever added, it does not belong
+# in this file: it is a different component's output, not a correction to
+# this one.
+verified: cesm2-only
+
 variables:
 - name: ABIO_ALK_SURF
   dims: [time, nlat, nlon]

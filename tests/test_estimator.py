@@ -202,6 +202,98 @@ def test_undeclared_stream_raises(tmp_path, monkeypatch):
         estimator.load_catalogue()
 
 
+# --- `verified` provenance ---------------------------------------------------
+
+def test_verified_defaults_to_unknown(tmp_path, monkeypatch):
+    """No `verified:` anywhere -> every variable is `unknown`, not silently
+    trusted."""
+    write_catalogue(tmp_path, monkeypatch, """
+        horiz_dims: [lat, lon]
+        variables:
+        - name: T
+          dims: [time, lat, lon]
+          streams: {month_1: std}
+        """)
+    catalogue, _ = estimator.load_catalogue()
+    assert catalogue["atm"][1][0]["verified"] == "unknown"
+
+
+def test_verified_file_level_default_applies(tmp_path, monkeypatch):
+    write_catalogue(tmp_path, monkeypatch, """
+        horiz_dims: [lat, lon]
+        verified: cesm2-only
+        variables:
+        - name: T
+          dims: [time, lat, lon]
+          streams: {month_1: std}
+        """)
+    catalogue, _ = estimator.load_catalogue()
+    assert catalogue["atm"][1][0]["verified"] == "cesm2-only"
+
+
+def test_verified_per_variable_override(tmp_path, monkeypatch):
+    """A variable can be confirmed against CESM3 without reclassifying the
+    rest of its (still LENS2-seeded) file."""
+    write_catalogue(tmp_path, monkeypatch, """
+        horiz_dims: [lat, lon]
+        variables:
+        - name: T
+          dims: [time, lat, lon]
+          streams: {month_1: std}
+          verified: cesm3
+        - name: U
+          dims: [time, lat, lon]
+          streams: {month_1: std}
+        """)
+    catalogue, _ = estimator.load_catalogue()
+    verified = {v["name"]: v["verified"] for v in catalogue["atm"][1]}
+    assert verified == {"T": "cesm3", "U": "unknown"}
+
+
+def test_invalid_file_level_verified_raises(tmp_path, monkeypatch):
+    write_catalogue(tmp_path, monkeypatch, """
+        horiz_dims: [lat, lon]
+        verified: cesm2
+        variables:
+        - name: T
+          dims: [time, lat, lon]
+          streams: {month_1: std}
+        """)
+    with pytest.raises(DataError, match="cesm2"):
+        estimator.load_catalogue()
+
+
+def test_invalid_variable_verified_raises(tmp_path, monkeypatch):
+    write_catalogue(tmp_path, monkeypatch, """
+        horiz_dims: [lat, lon]
+        variables:
+        - name: T
+          dims: [time, lat, lon]
+          streams: {month_1: std}
+          verified: definitely
+        """)
+    with pytest.raises(DataError, match="definitely"):
+        estimator.load_catalogue()
+
+
+def test_ocn_catalogue_is_cesm2_only():
+    """Regression test for the decision in notes/cmip7-request-tool-plan.md:
+    CESM3's ocean is MOM6, data/ocn.yaml is POP2, and that is a confirmed
+    mismatch, not an open question -- nobody should flip this file's default
+    back to `unknown` without reading that doc."""
+    catalogue, _ = estimator.load_catalogue()
+    assert all(v["verified"] == "cesm2-only" for v in catalogue["ocn"][1])
+
+
+def test_non_ocean_components_default_to_unknown():
+    """Nobody has checked any of these against a real CESM3 history file
+    yet. If this starts failing because a variable is now `cesm3`, that's
+    good news -- update the assertion, don't revert it."""
+    catalogue, _ = estimator.load_catalogue()
+    for component in ("atm", "lnd", "ice", "rof", "glc"):
+        assert all(v["verified"] == "unknown" for v in catalogue[component][1])
+
+
 def test_data_files_parse_as_yaml():
     """A syntax error in any data file should fail here with the filename."""
     for name in ("grids.yaml", "vertical.yaml", "streams.yaml",

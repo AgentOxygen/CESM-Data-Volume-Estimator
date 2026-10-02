@@ -20,8 +20,19 @@ DATA = ROOT / "data"
 BUNDLE = ROOT / "docs" / "data.json"
 
 COMPONENTS = ("atm", "lnd", "ocn", "ice", "rof", "glc")
-VAR_KEYS = {"name", "dims", "streams", "long_name", "units", "dtype_bytes"}
-FILE_KEYS = {"horiz_dims", "dtype_bytes", "variables"}
+VAR_KEYS = {"name", "dims", "streams", "long_name", "units", "dtype_bytes", "verified"}
+FILE_KEYS = {"horiz_dims", "dtype_bytes", "verified", "variables"}
+
+# A variable's CESM3 provenance, independent of whether it prices correctly
+# on any grid. Everything in data/*.yaml was seeded from a CESM2/LENS2 run
+# (see README), so "this name exists in the catalogue" is not evidence it
+# exists in CESM3 -- see notes/cmip7-request-tool-plan.md. Set file-wide with
+# a top-level `verified:` key (default "unknown"), override per-variable.
+#   cesm3      confirmed against a real CESM3 history file.
+#   cesm2-only confirmed NOT to exist in CESM3 (a different model entirely,
+#              e.g. ocn: POP2 vs. MOM6) -- stronger than "unknown".
+#   unknown    carried over from LENS2; never checked against CESM3.
+VERIFIED_STATES = {"cesm3", "cesm2-only", "unknown"}
 
 
 class DataError(Exception):
@@ -58,6 +69,11 @@ def load_catalogue():
         if unknown:
             raise DataError(f"{path}: unknown top-level key(s) {sorted(unknown)}")
         default_bytes = doc.get("dtype_bytes", 4)
+        default_verified = doc.get("verified", "unknown")
+        if default_verified not in VERIFIED_STATES:
+            raise DataError(
+                f"{path}: verified: {default_verified!r} is not one of "
+                f"{sorted(VERIFIED_STATES)}")
         horiz_dims = doc["horiz_dims"]
         seen = {}
         variables = []
@@ -78,6 +94,11 @@ def load_catalogue():
                     raise DataError(
                         f"{path}: {var['name']}: stream {stream!r} is not in "
                         f"streams.yaml (have {sorted(streams)})")
+            verified = var.get("verified", default_verified)
+            if verified not in VERIFIED_STATES:
+                raise DataError(
+                    f"{path}: {var['name']}: verified: {verified!r} is not "
+                    f"one of {sorted(VERIFIED_STATES)}")
             variables.append({
                 "name": var["name"],
                 "dims": list(var["dims"]),
@@ -85,6 +106,7 @@ def load_catalogue():
                 "long_name": var.get("long_name", ""),
                 "units": var.get("units", ""),
                 "dtype_bytes": var.get("dtype_bytes", default_bytes),
+                "verified": verified,
             })
         catalogue[component] = (horiz_dims, variables)
     return catalogue, streams

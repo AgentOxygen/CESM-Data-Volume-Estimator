@@ -10,6 +10,12 @@
 horiz_dims: [lat, lon]
 dtype_bytes: 4
 
+# This whole file is seeded from LENS2 (CESM2). A name existing here is not
+# evidence it exists in CESM3 -- nobody has checked, for any of these
+# variables, against a real CESM3 history file. `unknown` says so; set a
+# variable to `verified: cesm3` only once one actually has been checked.
+verified: unknown
+
 variables:
 - name: DIRECT_DISCHARGE_TO_OCEAN_ICE
   dims: [time, lat, lon]

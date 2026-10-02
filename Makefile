@@ -1,4 +1,4 @@
-.PHONY: test build dev shell import
+.PHONY: test build dev shell import import-cmip7
 
 DC = docker compose run --rm dev
 
@@ -22,3 +22,9 @@ shell:
 # this -- it overwrites hand-maintained files. See tools/import_csv.py.
 import:
 	$(DC) python tools/import_csv.py
+
+# Regenerate data/cmip7_request.yaml from the (local-only, not committed)
+# CMIP7 request CSVs in reference/. No-ops if you don't have them --
+# see tools/import_cmip7.py.
+import-cmip7:
+	$(DC) python tools/import_cmip7.py

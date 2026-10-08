@@ -18,31 +18,37 @@ verified: unknown
 
 variables:
 - name: DIRECT_DISCHARGE_TO_OCEAN_ICE
+  verified: cesm3
   dims: [time, lat, lon]
   streams: {month_1: std}
   long_name: 'MOSART direct discharge into ocean: ICE'
   units: m3/s
 - name: DIRECT_DISCHARGE_TO_OCEAN_LIQ
+  verified: cesm3
   dims: [time, lat, lon]
   streams: {month_1: std}
   long_name: 'MOSART direct discharge into ocean: LIQ'
   units: m3/s
 - name: RIVER_DISCHARGE_OVER_LAND_ICE
+  verified: cesm3
   dims: [time, lat, lon]
   streams: {month_1: std}
   long_name: 'MOSART river basin flow: ICE'
   units: m3/s
 - name: RIVER_DISCHARGE_OVER_LAND_LIQ
+  verified: cesm3
   dims: [time, lat, lon]
   streams: {day_1: MOAR, hour_6: MOAR, month_1: std}
   long_name: 'MOSART river basin flow: LIQ'
   units: m3/s
 - name: TOTAL_DISCHARGE_TO_OCEAN_ICE
+  verified: cesm3
   dims: [time, lat, lon]
   streams: {month_1: std}
   long_name: 'MOSART total discharge into ocean: ICE'
   units: m3/s
 - name: TOTAL_DISCHARGE_TO_OCEAN_LIQ
+  verified: cesm3
   dims: [time, lat, lon]
   streams: {hour_6: MOAR, month_1: std}
   long_name: 'MOSART total discharge into ocean: LIQ'

@@ -10,6 +10,7 @@ import csv
 import textwrap
 
 import pytest
+import yaml
 
 import estimator
 import tools.import_cmip7 as import_cmip7
@@ -145,11 +146,60 @@ def test_unmapped_realm_resolves_nothing(tmp_path, monkeypatch):
     assert import_cmip7.resolve_token("TREFHT", "nonsense-realm", index) == (None, None)
 
 
+# --- resolve_mapping: status + component_source -----------------------------
+
+def mini_indexes(tmp_path, monkeypatch):
+    write_mini_catalogue(tmp_path, monkeypatch)
+    catalogue, _ = estimator.load_catalogue()
+    return import_cmip7.index_catalogue(catalogue)
+
+
+LOG_INDEX = {"atm": {"TREFHT", "LOGGED_ONLY"}, "lnd": {"TREFHT", "TSA"}}
+
+
+def test_logged_name_is_verified_and_component_comes_from_log(tmp_path, monkeypatch):
+    cat = mini_indexes(tmp_path, monkeypatch)
+    m = import_cmip7.resolve_mapping("LOGGED_ONLY", "atmos", LOG_INDEX, cat)
+    assert (m["status"], m["component"], m["component_source"]) == ("verified", "atm", "log")
+    assert m["realm_mismatch"] is False
+
+
+def test_log_collision_prefers_the_realm_component_and_keeps_both(tmp_path, monkeypatch):
+    cat = mini_indexes(tmp_path, monkeypatch)
+    m = import_cmip7.resolve_mapping("TREFHT", "land", LOG_INDEX, cat)
+    assert m["component"] == "lnd" and m["log_components"] == ["atm", "lnd"]
+
+
+def test_log_beats_realm_and_flags_the_mismatch(tmp_path, monkeypatch):
+    cat = mini_indexes(tmp_path, monkeypatch)
+    m = import_cmip7.resolve_mapping("TSA", "atmos", LOG_INDEX, cat)
+    assert (m["component"], m["component_source"]) == ("lnd", "log")
+    assert m["realm_mismatch"] is True
+
+
+def test_catalogue_only_match_is_cesm2(tmp_path, monkeypatch):
+    cat = mini_indexes(tmp_path, monkeypatch)
+    m = import_cmip7.resolve_mapping("SST", "ocean", LOG_INDEX, cat)
+    assert (m["status"], m["component"], m["component_source"], m["catalogue_state"]) == \
+        ("cesm2", "ocn", "catalogue", "cesm2-only")
+
+
+def test_unknown_name_is_spreadsheet_only_with_realm_fallback(tmp_path, monkeypatch):
+    cat = mini_indexes(tmp_path, monkeypatch)
+    m = import_cmip7.resolve_mapping("GHOST", "landIce", LOG_INDEX, cat)
+    assert (m["status"], m["component"], m["component_source"]) == \
+        ("spreadsheet-only", "glc", "realm-fallback")
+
+
+def test_every_realm_has_a_fallback_component():
+    assert set(import_cmip7.REALM_FALLBACK) == set(import_cmip7.REALM_COMPONENTS)
+
+
 # --- build_requests: end to end ---------------------------------------------
 
 CESM3_FIELDS = ["CMIP7 Compound Name", "CESM Variable Name",
                 "Modelling Realm - Primary", "CMIP7 Frequency",
-                "CMIP7 Variable Groups"]
+                "CMIP7 Variable Groups", "List of Experiments", "UID"]
 
 
 def write_cesm3_csv(tmp_path, rows):
@@ -161,53 +211,59 @@ def write_cesm3_csv(tmp_path, rows):
     return path
 
 
+def write_log_yaml(tmp_path, monkeypatch):
+    path = tmp_path / "extracted_fields.yaml"
+    path.write_text(yaml.safe_dump({
+        "atm": {"matched": [{"name": "TREFHT"}], "new": [{"name": "LOGGED_ONLY"}]}}))
+    monkeypatch.setattr(import_cmip7, "LOG_FIELDS_YAML", path)
+
+
+def row(name, raw, realm="atmos", freq="mon", groups="grp_high",
+        experiments="historical,piControl", uid="u"):
+    return {"CMIP7 Compound Name": name, "CESM Variable Name": raw,
+            "Modelling Realm - Primary": realm, "CMIP7 Frequency": freq,
+            "CMIP7 Variable Groups": groups, "List of Experiments": experiments,
+            "UID": uid}
+
+
 def test_build_requests_end_to_end(tmp_path, monkeypatch):
     write_mini_catalogue(tmp_path, monkeypatch)
     write_priority_csvs(tmp_path, monkeypatch)
-    csv_path = write_cesm3_csv(tmp_path, [
-        {"CMIP7 Compound Name": "atmos.trefht.mon.glb",
-         "CESM Variable Name": "TREFHT", "Modelling Realm - Primary": "atmos",
-         "CMIP7 Frequency": "mon", "CMIP7 Variable Groups": "grp_high"},
-        {"CMIP7 Compound Name": "atmos.partial.mon.glb",
-         "CESM Variable Name": "TREFHT, GHOST_VAR",
-         "Modelling Realm - Primary": "atmos",
-         "CMIP7 Frequency": "mon", "CMIP7 Variable Groups": "grp_low"},
-        {"CMIP7 Compound Name": "ocean.sst.mon.glb",
-         "CESM Variable Name": "SST", "Modelling Realm - Primary": "ocean",
-         "CMIP7 Frequency": "mon", "CMIP7 Variable Groups": ""},
-        {"CMIP7 Compound Name": "land.norequest.mon.glb",
-         "CESM Variable Name": "N/A", "Modelling Realm - Primary": "land",
-         "CMIP7 Frequency": "mon", "CMIP7 Variable Groups": "grp_high"},
-        {"CMIP7 Compound Name": "atmos.fixedfield.fx.glb",
-         "CESM Variable Name": "TREFHT", "Modelling Realm - Primary": "atmos",
-         "CMIP7 Frequency": "fx", "CMIP7 Variable Groups": "grp_high"},
-    ])
-    monkeypatch.setattr(import_cmip7, "CESM3_CSV", csv_path)
+    write_log_yaml(tmp_path, monkeypatch)
+    monkeypatch.setattr(import_cmip7, "CESM3_CSV", write_cesm3_csv(tmp_path, [
+        row("a.trefht", "TREFHT", experiments="historical, piControl, historical"),
+        row("a.partial", "TREFHT, GHOST_VAR", groups="grp_low", experiments="amip"),
+        row("o.sst", "SST", realm="ocean", groups="", experiments="historical"),
+        row("l.none", "N/A", realm="land"),
+        row("a.fixed", "TREFHT", freq="fx"),
+    ]))
 
-    requests = {r["name"]: r for r in import_cmip7.build_requests()}
+    requests, experiments = import_cmip7.build_requests()
+    by_name = {r["name"]: r for r in requests}
 
-    trefht = requests["atmos.trefht.mon.glb"]
-    assert trefht["stream"] == "month_1"
-    assert trefht["priority"] == 2
-    assert trefht["tokens"] == [{"name": "TREFHT", "component": "atm", "verified": "unknown"}]
+    trefht = by_name["a.trefht"]
+    assert trefht["stream"] == "month_1" and trefht["priority"] == 2
+    assert trefht["raw_cesm_name"] == "TREFHT" and trefht["groups"] == ["grp_high"]
+    assert trefht["source_line"] == 2 and by_name["a.partial"]["source_line"] == 3
+    assert [(t["name"], t["status"]) for t in trefht["tokens"]] == [("TREFHT", "verified")]
 
-    partial = requests["atmos.partial.mon.glb"]
-    assert partial["tokens"] == [
-        {"name": "TREFHT", "component": "atm", "verified": "unknown"},
-        {"name": "GHOST_VAR", "component": None, "verified": None},
-    ]
+    partial = by_name["a.partial"]
+    assert [(t["name"], t["status"], t["component_source"]) for t in partial["tokens"]] == [
+        ("TREFHT", "verified", "log"), ("GHOST_VAR", "spreadsheet-only", "realm-fallback")]
     assert partial["priority"] == 4
 
-    sst = requests["ocean.sst.mon.glb"]
-    assert sst["tokens"] == [{"name": "SST", "component": "ocn", "verified": "cesm2-only"}]
-    assert sst["priority"] is None
+    sst = by_name["o.sst"]
+    assert sst["tokens"][0]["status"] == "cesm2" and sst["priority"] is None
 
-    unresolved = requests["land.norequest.mon.glb"]
-    assert unresolved["tokens"] == []
+    none = by_name["l.none"]
+    assert none["tokens"] == [] and none["fallback_component"] == "lnd"
 
-    fixed = requests["atmos.fixedfield.fx.glb"]
-    assert fixed["stream"] is None            # fx isn't modeled -- see question 3
-    assert fixed["tokens"] == [{"name": "TREFHT", "component": "atm", "verified": "unknown"}]
+    assert by_name["a.fixed"]["stream"] is None      # fx isn't modeled
+
+    # experiment -> request indices, de-duplicated per request
+    assert experiments["historical"] == [0, 2, 3, 4]
+    assert experiments["piControl"] == [0, 3, 4]
+    assert experiments["amip"] == [1]
 
 
 # --- main(): skip gracefully, never error, when inputs are absent ----------
@@ -216,6 +272,7 @@ def test_main_skips_without_erroring_when_inputs_missing(tmp_path, monkeypatch, 
     monkeypatch.setattr(import_cmip7, "CESM3_CSV", tmp_path / "missing.csv")
     monkeypatch.setattr(import_cmip7, "VARIABLE_GROUP_CSV", tmp_path / "missing2.csv")
     monkeypatch.setattr(import_cmip7, "PRIORITY_LEVEL_CSV", tmp_path / "missing3.csv")
+    monkeypatch.setattr(import_cmip7, "LOG_FIELDS_YAML", tmp_path / "missing4.yaml")
     output = tmp_path / "cmip7_request.yaml"
     monkeypatch.setattr(import_cmip7, "OUTPUT", output)
 
@@ -223,3 +280,23 @@ def test_main_skips_without_erroring_when_inputs_missing(tmp_path, monkeypatch, 
 
     assert not output.exists()
     assert "skipping" in capsys.readouterr().out
+
+
+# --- the committed data/cmip7_request.yaml must match its real inputs ------
+
+@pytest.mark.skipif(
+    not (import_cmip7.CESM3_CSV.exists() and import_cmip7.VARIABLE_GROUP_CSV.exists()
+         and import_cmip7.PRIORITY_LEVEL_CSV.exists()
+         and import_cmip7.LOG_FIELDS_YAML.exists()),
+    reason="reference/ CMIP7 CSVs are local-only -- skip where they're absent")
+def test_committed_bundle_is_not_stale():
+    """Catches "the catalogue's verified: tags changed, forgot to
+    regenerate" -- same failure mode `estimator.py`'s own
+    test_bundle_is_not_stale guards against for docs/data.json. This is
+    exactly how data/cmip7_request.yaml went stale once already: applying
+    tools/apply_verified_tags.py changed data/*.yaml without re-running
+    `make import-cmip7`."""
+    current = import_cmip7.render(*import_cmip7.build_requests())
+    assert current == import_cmip7.OUTPUT.read_text(), (
+        "data/cmip7_request.yaml is out of date -- run `make import-cmip7` "
+        "and commit the result.")

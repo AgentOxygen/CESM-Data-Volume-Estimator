@@ -5,9 +5,9 @@ Development scripts. None of them is needed to run or deploy the site.
 ## dev.py — the iteration loop
 
 `make dev` runs this. It serves `docs/` on http://localhost:8000 and watches
-`data/*.yaml`, rebuilding `docs/data.json` on every save. The page reloads
-itself when either it or the bundle changes, so editing `docs/index.html` or a
-YAML file and saving is the whole loop.
+`data/cmip7_request.yaml`, rebuilding `docs/data.json` on every save. The page reloads
+itself when either it or the bundle changes, so editing `docs/index.html` or the
+request YAML and saving is the whole loop.
 
 The repo is bind-mounted into the container, so host edits are visible instantly
 — what this adds is the rebuild and the reload.
@@ -19,7 +19,7 @@ The repo is bind-mounted into the container, so host edits are visible instantly
   `Last-Modified` once every 700 ms.
 - A reload discards whatever was selected on the page. That is usually what you
   want while iterating on layout.
-- A YAML syntax error prints `BUILD FAILED` with the parser message and leaves
+- A build error prints `BUILD FAILED` with the parser message and leaves
   the server running on the last good bundle. Fix the file and the next save
   rebuilds.
 
@@ -44,7 +44,7 @@ A capture takes well under a second.
 make dev    # in another terminal
 
 python3 tools/shot.py http://localhost:8000/ -o /tmp/check.png \
-    --wait 'document.querySelector("tr[data-i]")'
+    --wait 'document.querySelector("tr.item")'
 ```
 
 `--wait` polls a JS expression until it is truthy, then captures. **Use it** —
@@ -57,26 +57,16 @@ properties of `window`, so `window.B !== undefined` never becomes true no matter
 how loaded the page is.
 
 `--eval` runs JS once before capture, which is how you photograph a specific
-state rather than the default one:
+state rather than the default one. The page reads `?exp=<experiment>` from the
+URL, so most states need no script at all:
 
 ```bash
-# The LENS2 std preset, filtered to one variable, all sections expanded
-python3 tools/shot.py http://localhost:8000/ -o /tmp/check.png \
-    --wait 'document.querySelector("tr[data-i]")' \
-    --eval 'document.querySelector("[data-preset=std]").click();
-            const f = document.getElementById("filter");
-            f.value = "TSA"; f.dispatchEvent(new Event("input"));
-            for (const d of document.querySelectorAll("details")) d.open = true;'
+python3 tools/shot.py 'http://localhost:8000/?exp=historical' -o /tmp/check.png \
+    --wait 'document.querySelector("tr.item")'
 ```
 
-Changing the configuration dropdown needs an explicit `change` event, since
-setting `selectedIndex` from script does not fire one:
-
-```js
-const c = document.getElementById("config");
-c.selectedIndex = [...c.options].findIndex(o => o.text.includes("ne30pg3"));
-c.dispatchEvent(new Event("change"));
-```
+Checkbox changes need an explicit `change` event, since setting `.checked` from
+script does not fire one.
 
 Other flags: `-s WIDTHxHEIGHT` (default 1280x800), `--settle` for extra seconds
 of run time before capture (default 0.3), `--quiet` to drop the console output.
@@ -85,19 +75,22 @@ The console shows page errors and failed resource loads — a missing `data.json
 is the usual failure. Requests for `favicon.ico` are filtered out, so anything
 you see is real.
 
-## import_csv.py — one-time seeder, kept for provenance
+## import_cmip7.py — regenerates data/cmip7_request.yaml
 
-Regenerates every `data/<component>.yaml` from
-`reference/lens2output200129.csv`. It has already been run; the YAML files it
-produced are now the source of truth and are **maintained by hand**.
+`make import-cmip7`. Joins the CMIP7 request (`reference/CESM3_current.csv`,
+priority CSVs) to CESM3 run-log field lists
+(`reference/log_files/extracted_fields.yaml`) and the legacy catalogue, writing
+the committed `data/cmip7_request.yaml`. The inputs are local-only; without them
+the script prints why and leaves the file alone. See its docstring for the
+status and component-source rules.
 
-```bash
-make import    # overwrites data/*.yaml — you almost never want this
-```
+## extract_log_fields.py — CESM3 run logs -> extracted_fields.yaml
 
-Run it only to re-derive the seed from scratch. Anything you hand-edited in
-`data/*.yaml` will be lost.
+Parses the field lists in a real CESM3 run's logs (`reference/log_files/`).
+Run it, then `make import-cmip7`, whenever new logs arrive.
 
-Future imports from other sources (CAM `addfld`, CTSM `hist_addfld`, `ncdump`
-headers) should be separate scripts emitting the same schema, not extensions of
-this one. Don't invest in it.
+## apply_verified_tags.py — legacy catalogue provenance
+
+Writes `verified: cesm3` into `data/<component>.yaml` for names found in the
+logs. Only the legacy catalogue's own tags depend on it; the web page's
+`verified` status comes straight from the logs via the importer.

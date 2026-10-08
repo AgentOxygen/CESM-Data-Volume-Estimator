@@ -12,10 +12,22 @@ evaluate.
 
     python tools/import_cmip7.py
 
-The three input CSVs are local-only (see reference/.gitignore) and not
-committed. Missing any of them is not an error: this script prints why and
-leaves data/cmip7_request.yaml untouched, so `make build`/`make test` work
-for anyone who doesn't have the CMIP7 reference data to hand.
+Every token gets a mapping `status` and a `component_source`, so the web app
+can show how each mapping was derived (see notes/cmip7-namelist-lists-plan.md):
+
+    status             verified          named in CESM3_current.csv AND registered
+                                         in a real CESM3 run log
+                       cesm2             named in the spreadsheet; only the old
+                                         CESM2-seeded data/<comp>.yaml has it
+                       spreadsheet-only  named in the spreadsheet; in no log and
+                                         not in the catalogue
+                       (missing)         no CESM name in the row -> `tokens: []`
+    component_source   log | catalogue | realm-fallback (REALM_FALLBACK below)
+
+The input CSVs and reference/log_files/extracted_fields.yaml are local-only
+(see reference/.gitignore) and not committed. Missing any of them is not an
+error: this script prints why and leaves data/cmip7_request.yaml untouched,
+so `make build`/`make test` work for anyone without the reference data.
 """
 
 import csv
@@ -32,6 +44,7 @@ import estimator  # noqa: E402  (needs ROOT on sys.path first)
 CESM3_CSV = ROOT / "reference" / "CESM3_current.csv"
 VARIABLE_GROUP_CSV = ROOT / "reference" / "cmip7-data-request" / "Variable Group-MASTER.csv"
 PRIORITY_LEVEL_CSV = ROOT / "reference" / "cmip7-data-request" / "Priority Level-MASTER.csv"
+LOG_FIELDS_YAML = ROOT / "reference" / "log_files" / "extracted_fields.yaml"
 OUTPUT = ROOT / "data" / "cmip7_request.yaml"
 
 # CMIP7's 8 "Modelling Realm - Primary" values -> the data/<component>.yaml
@@ -49,6 +62,23 @@ REALM_COMPONENTS = {
     "ocnBgchem": ["ocn"],
     "seaIce": ["ice"],
     "landIce": ["glc"],
+}
+
+# Primary realm -> the single component a token is filed under when neither a
+# log nor the catalogue says where it lives. Draft, for review: every
+# token placed this way is flagged `component_source: realm-fallback`. Known
+# weak spots: `land` can't tell lnd from rof (rof-only names are caught by the
+# log first), and `landIce` is mostly CISM (glc) names no log covers, though
+# ~70 landIce tokens turn out to be CTSM (lnd) fields -- those resolve by log.
+REALM_FALLBACK = {
+    "atmos": "atm",
+    "aerosol": "atm",
+    "atmosChem": "atm",
+    "land": "lnd",
+    "ocean": "ocn",
+    "ocnBgchem": "ocn",
+    "seaIce": "ice",
+    "landIce": "glc",
 }
 
 # CMIP7 Frequency -> our stream name. fx/subhr/dec are deliberately absent:
@@ -158,34 +188,105 @@ def resolve_token(name, realm, index):
     return None, None
 
 
+def load_log_index():
+    """{component: {field names registered in that component's real log}}.
+    extracted_fields.yaml splits names into `matched`/`new` by whether the
+    old catalogue had them -- irrelevant here, so they're re-joined."""
+    with LOG_FIELDS_YAML.open() as fh:
+        extracted = yaml.safe_load(fh)
+    return {component: {f["name"] for f in entry.get("matched", []) + entry.get("new", [])}
+            for component, entry in extracted.items()}
+
+
+def resolve_mapping(name, realm, log_index, cat_index):
+    """Everything known about where one native field comes from.
+
+    Log evidence beats the realm: if the log registers `name` in some
+    component, that is the component, and `realm_mismatch` records when the
+    realm would have pointed elsewhere. A field several components register
+    (TSA-style collisions) goes to the first realm-preferred one;
+    `log_components` keeps the full list so the ambiguity is auditable.
+    """
+    preferred = REALM_COMPONENTS.get(realm, [])
+    log_components = sorted(c for c, names in log_index.items() if name in names)
+    cat_component, cat_state = resolve_token(name, realm, cat_index)
+    in_realm = [c for c in preferred if c in log_components]
+    if log_components:
+        component = (in_realm or log_components)[0]
+        source, status = "log", "verified"
+    elif cat_component:
+        component, source, status = cat_component, "catalogue", "cesm2"
+    else:
+        component = REALM_FALLBACK.get(realm)
+        source, status = "realm-fallback", "spreadsheet-only"
+    return {
+        "name": name,
+        "status": status,
+        "component": component,
+        "component_source": source,
+        "log_components": log_components,
+        "catalogue_state": cat_state,
+        "realm_mismatch": bool(log_components and not in_realm and preferred),
+    }
+
+
+def split_list(cell):
+    """Comma-separated CSV cell -> de-duplicated list, first-seen order."""
+    return list(dict.fromkeys(p.strip() for p in cell.split(",") if p.strip()))
+
+
 def build_requests():
+    """(requests, experiments): one record per CSV row, plus
+    {experiment: [indices into requests]} for the experiment filter."""
     catalogue, _ = estimator.load_catalogue()
-    index = index_catalogue(catalogue)
+    cat_index = index_catalogue(catalogue)
+    log_index = load_log_index()
     group_priorities = load_group_priorities()
     requests = []
+    experiments = {}
     with CESM3_CSV.open(newline="", encoding="utf-8-sig") as fh:
-        for row in csv.DictReader(fh):
+        reader = csv.DictReader(fh)
+        reader.fieldnames                          # read the header first
+        while True:
+            start_line = reader.line_num + 1       # records can span lines
+            row = next(reader, None)
+            if row is None:
+                break
             realm = row.get("Modelling Realm - Primary", "")
             frequency = row.get("CMIP7 Frequency", "")
-            tokens = []
-            for name in normalize_tokens(row.get("CESM Variable Name", "")):
-                component, verified = resolve_token(name, realm, index)
-                tokens.append({"name": name, "component": component,
-                                "verified": verified})
+            raw = row.get("CESM Variable Name", "")
+            tokens = [resolve_mapping(n, realm, log_index, cat_index)
+                      for n in normalize_tokens(raw)]
+            groups = split_list(row.get("CMIP7 Variable Groups", ""))
             requests.append({
                 "name": row["CMIP7 Compound Name"],
+                "uid": row.get("UID", ""),
+                "source_line": start_line,
+                "raw_cesm_name": raw,
                 "realm": realm,
                 "frequency": frequency,
                 "stream": FREQUENCY_STREAMS.get(frequency),
                 "priority": row_priority(row, group_priorities),
+                "groups": groups,
+                # Where a row with no tokens at all would be filed.
+                "fallback_component": REALM_FALLBACK.get(realm),
                 "tokens": tokens,
             })
-    return requests
+            for experiment in split_list(row.get("List of Experiments", "")):
+                experiments.setdefault(experiment, []).append(len(requests) - 1)
+    return requests, dict(sorted(experiments.items()))
+
+
+def render(requests, experiments):
+    return HEADER + yaml.safe_dump(
+        {"requests": requests, "experiments": experiments}, sort_keys=False,
+        default_flow_style=False, allow_unicode=True, width=1000)
 
 
 HEADER = """\
 # GENERATED by `tools/import_cmip7.py` from reference/CESM3_current.csv +
-# reference/cmip7-data-request/{Variable Group,Priority Level}-MASTER.csv.
+# reference/cmip7-data-request/{Variable Group,Priority Level}-MASTER.csv +
+# reference/log_files/extracted_fields.yaml.
 # Do not hand-edit -- regenerate with `make import-cmip7` whenever the CMIP7
 # request CSVs change. See notes/cmip7-request-tool-plan.md for the join
 # rules this encodes.
@@ -203,21 +304,23 @@ def rel(path):
 
 
 def main():
-    missing = [p for p in (CESM3_CSV, VARIABLE_GROUP_CSV, PRIORITY_LEVEL_CSV)
-               if not p.exists()]
+    missing = [p for p in (CESM3_CSV, VARIABLE_GROUP_CSV, PRIORITY_LEVEL_CSV,
+                           LOG_FIELDS_YAML) if not p.exists()]
     if missing:
         names = ", ".join(rel(p) for p in missing)
         print(f"skipping: missing {names} (local-only, not committed -- see "
               f"reference/.gitignore). {rel(OUTPUT)} left as-is.")
         return
-    requests = build_requests()
-    body = yaml.safe_dump({"requests": requests}, sort_keys=False,
-                           default_flow_style=False, allow_unicode=True,
-                           width=1000)
-    OUTPUT.write_text(HEADER + body)
-    resolved = sum(1 for r in requests if any(t["component"] for t in r["tokens"]))
-    print(f"{rel(OUTPUT)}: {len(requests)} requests, "
-          f"{resolved} with at least one resolved token")
+    requests, experiments = build_requests()
+    OUTPUT.write_text(render(requests, experiments))
+    by_status = {}
+    for r in requests:
+        for t in r["tokens"]:
+            by_status[t["status"]] = by_status.get(t["status"], 0) + 1
+    no_name = sum(1 for r in requests if not r["tokens"])
+    print(f"{rel(OUTPUT)}: {len(requests)} requests, {len(experiments)} "
+          f"experiments; tokens by status {by_status}; "
+          f"{no_name} requests with no CESM name (missing)")
 
 
 if __name__ == "__main__":

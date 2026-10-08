@@ -1,137 +1,97 @@
-# CESM Data Volume Estimator
+# CMIP7 → CESM3 variable lists
 
-A helpful tool for calculating and exploring the total data volume for CESM runs.
+A scientist is handed the full CMIP7 data request and has to work out which
+CESM3 history variables to put in each component's namelist. This tool answers,
+in order:
 
-Pick a grid and vertical configuration, tick the variables you want at the
-frequencies you want, and see how much data the run will produce before you commit to a namelist.
+1. **Which variables does my experiment need?** Pick an experiment (and a
+   priority cutoff) to get the matching CMIP7 compound names.
+2. **Which CESM3 variables is that, by model component?** Each component
+   (atm, lnd, ocn, ice, rof, glc) needs its own namelist.
+3. **At which frequencies?** Every frequency needs its own entry, even for the
+   same variable.
+4. **Save the list.** One plain-text file per component, one `VARIABLE
+   FREQUENCY` line each. Namelist formatting is a later step.
 
-This is a static webpage (no server), published from `docs/` on the `main` branch via GitHub Pages.
+It is a static page (no server), published from `docs/` via GitHub Pages.
 
-## Methodology
+## Reading the mapping
 
-For one variable in one output stream:
+The CMIP7 → CESM3 mapping comes from a spreadsheet, and it is not equally
+trustworthy everywhere. Every variable shows how its mapping was derived, so the
+page can be audited against the source data:
+
+| Symbol | Status | Meaning |
+|---|---|---|
+| ✓ | verified | named in `CESM3_current.csv` **and** registered by a real CESM3 run's log |
+| ◐ | spreadsheet only | named in the spreadsheet, not seen in any log |
+| ↺ | old CESM2 mapping | only the CESM2/LENS2-era catalogue has it |
+| ⚠ | missing | the spreadsheet row gives no CESM variable name (listed, never exported) |
+
+A second marker says where the **component** came from: the run `log`, the old
+`catalogue`, or a `realm` guess from the CMIP7 realm column
+(`REALM_FALLBACK` in `tools/import_cmip7.py`). `≠realm` flags a variable the
+log put in a different component than its realm implies.
+
+Click any row for its audit trail: the raw spreadsheet cell, UID, CSV line,
+priority groups and the logs involved. Each component's **audit .csv** carries
+the same trail for every exported line; the `.txt` itself holds CESM3 names
+only, never compound names.
+
+## How the data is made
 
 ```
-bytes_per_sample = dtype_bytes × Π (size of each dimension except `time`)
-bytes_per_year   = bytes_per_sample × samples_per_year(stream)
-total            = years × Σ over everything you selected
+reference/CESM3_current.csv            the CMIP7 request joined to CESM variable names
+reference/cmip7-data-request/*.csv     priority levels, variable groups
+reference/log_files/                   real CESM3 run logs
+        │  tools/extract_log_fields.py   → reference/log_files/extracted_fields.yaml
+        │  tools/import_cmip7.py         (make import-cmip7)
+        ▼
+data/cmip7_request.yaml                 committed; every status/component decision lives here
+        │  build.py                      (make build)
+        ▼
+docs/data.json                          committed; what the page loads
 ```
 
-Dimension sizes come from the selected grid. Variables
-declare their dimensions the way `ncdump -h` prints them, and each *component*
-declares which of those are the horizontal ones. A spectral-element grid simply
-replaces that pair:
+`reference/` is local-only and not committed, so a fresh clone can build and
+test without it; the importer skips itself when its inputs are missing. All
+judgement happens in Python at build time; the page only filters and groups.
 
-```yaml
-# data/atm.yaml
-horiz_dims: [lat, lon]
-
-# data/grids.yaml, under a CESM3 SE configuration
-atm: {horiz: [ncol], sizes: {ncol: 48600, ...}}
-```
-
-So `T` declared as `[time, lev, lat, lon]` resolves to `lat × lon × lev` on an
-FV grid and to `ncol × lev` on a spectral-element grid.
-
-All of the resolution happens in Python at build time (`estimator.py`), which
-writes `docs/data.json`. The web page only multiplies and adds, so it cannot
-disagree with the tested code, and a mistake in the YAML fails `make test`.
+`data/{atm,lnd,ocn,ice,rof,glc}.yaml` and `streams.yaml` are the frozen
+CESM2/LENS2 catalogue. Nothing is priced from them any more; they exist only so
+the importer can mark a mapping `↺ old CESM2`. Requests at `fx`, `subhr` and
+`dec` frequencies are listed with their CMIP7 label like any other.
 
 ## Limitations
 
-The following are not accounted for:
-- **Compression.** Volumes are raw uncompressed bytes. If your run writes
-  deflate/zstd-compressed netCDF, real output will be smaller — often
-  substantially, and by a factor that varies per field.
-- **netCDF header overhead.** Well under 0.1% at any run length that matters.
-- **Restart files, logs, and the timeseries copies** produced by post-processing.
-
-If you need compression modelled, see "Calibrating against a real run" below.
-
-## Adding or Updating a Variable
-
-This is the common case and needs no Python.
-
-1. Open the component file: `data/atm.yaml`, `data/lnd.yaml`, `data/ocn.yaml`,
-   `data/ice.yaml`, `data/rof.yaml`, or `data/glc.yaml`.
-
-2. Get the dimensions from a real netCDF history file, for example for `TSA`:
-
-   ```
-   ncdump -h myrun.cam.h0.0001-01.nc | grep -A2 'float TSA'
-   ```
-
-3. Add or edit the record, keeping the list sorted by `name`:
-
-   ```yaml
-   - name: TSA
-     dims: [time, lat, lon]
-     streams: {month_1: std}
-     long_name: 2m air temperature
-     units: K
-   ```
-
-   Optional per-variable `dtype_bytes: 8` overrides the file's default of 4.
-
-   If the variable already appears with **different** dims in a different
-   stream, add a **second record**. CTSM does this a lot:
-   many fields are written gridded in one stream and as subgrid vectors in
-   another.
-
-   ```yaml
-   - name: TSA
-     dims: [time, pft]          # vector output, hist_dov2xy = .false.
-     streams: {month_1: std}
-   ```
-
-4. `make test` catches typos, unknown dimensions, and duplicate records.
-5. `make build` regenerates `docs/data.json`.
-6. Commit **both** the YAML and `docs/data.json`, and open a PR. The diff should
-   be your variable plus a line or two of JSON.
-
-## Add a grid
-
-Copy the closest block in `data/grids.yaml`, change the sizes, and run `make test`.
-
-Set a dimension to `null` to mean "does not exist on this grid". Variables
-using it are then excluded and shown as unavailable.
-
-Vertical resolution lives separately in `data/vertical.yaml`. The tool
-offers every grid × vertical combination.
-
-## Estimated and Unverified Entries
-
-Several sizes are marked `UNVERIFIED` or `ESTIMATE` in `data/grids.yaml`.
-Replacing one with a measured value (and deleting the marker) is a
-useful contribution.
+- One experiment at a time; no ensemble or multi-experiment arithmetic.
+- The log evidence is per component, not per line, and the MOM6 (ocn) log has no
+  field list, so most ocean variables are `◐` with a `realm` component.
+- No data-volume estimate (the old tool's purpose); it may return as a
+  secondary figure.
 
 ## Development
 
-Everything runs in Docker; you need nothing installed but Docker.
+Everything runs in Docker.
 
 ```
-make test     # run the test suite
-make build    # regenerate docs/data.json from data/*.yaml
-make dev      # http://localhost:8000, rebuilds and reloads on save
-make shell    # a shell in the dev container
+make test          # pytest
+make build         # regenerate docs/data.json from data/cmip7_request.yaml
+make import-cmip7  # regenerate data/cmip7_request.yaml (needs reference/)
+make dev           # http://localhost:8000, rebuilds and reloads on save
+make shell
 ```
 
-### Layout
+Commit `data/cmip7_request.yaml` and `docs/data.json` together; tests fail if
+either is stale.
 
 ```
-data/*.yaml           the catalogue of data variables
-  {atm,lnd,...}.yaml  one file per component: variables, dims, streams
-  grids.yaml          grids and the dimension sizes each component sees
-  vertical.yaml       CAM vertical configurations (lev/ilev)
-  streams.yaml        output frequencies and samples per year
-estimator.py          load, validate, resolve, build. All the logic lives here.
-tests/                pytest suite
-docs/                 the site. GitHub Pages serves this folder.
-  index.html          one file, vanilla JS, no build step
-  data.json           GENERATED by `make build` and served via GitHub Pages
-tools/                dev scripts -- see tools/README.md
-  dev.py              `make dev`: serve, rebuild on save, live reload
-  shot.py             screenshot the page (headless Chromium, for LLM agents)
+build.py             data/cmip7_request.yaml → docs/data.json
+estimator.py         legacy-catalogue loader (used only by the importer)
+tools/               importer, log extractor, dev server, screenshot helper — see tools/README.md
+tests/               pytest suite
+docs/index.html      the page: one file, vanilla JS
+cesm-field-scraper/  standalone scraper of CESM3 source for registerable fields
 ```
 
 ## License

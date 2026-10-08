@@ -10,6 +10,12 @@
 horiz_dims: [nj, ni]
 dtype_bytes: 4
 
+# This whole file is seeded from LENS2 (CESM2). A name existing here is not
+# evidence it exists in CESM3 -- nobody has checked, for any of these
+# variables, against a real CESM3 history file. `unknown` says so; set a
+# variable to `verified: cesm3` only once one actually has been checked.
+verified: unknown
+
 variables:
 - name: FYarea
   dims: [time, nj, ni]
@@ -22,11 +28,13 @@ variables:
   long_name: first-year ice area
   units: m2
 - name: Tsfc
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: snow/ice surface temperature
   units: Celsius
 - name: aice
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: ice area (aggregate)
@@ -37,6 +45,7 @@ variables:
   long_name: ice area (aggregate)
   units: '1'
 - name: aicen
+  verified: cesm3
   dims: [time, nc, nj, ni]
   streams: {month_1: std}
   long_name: ice area categories
@@ -47,36 +56,43 @@ variables:
   long_name: ice area categories
   units: '1'
 - name: albsni
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: snow/ice broad band albedo
   units: '%'
 - name: alidf_ai
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: near IR diffuse albedo
   units: '%'
 - name: alidr_ai
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: near IR direct albedo
   units: '%'
 - name: alvdf_ai
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: visible diffuse albedo
   units: '%'
 - name: alvdr_ai
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: visible direct albedo
   units: '%'
 - name: apeff_ai
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: radiation-effective pond area fraction over grid cell
   units: '1'
 - name: apond_ai
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: melt pond fraction of grid cell
@@ -87,11 +103,13 @@ variables:
   long_name: melt pond fraction of grid cell
   units: '1'
 - name: ardg
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: ridged ice area fraction
   units: '1'
 - name: congel
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: congelation ice growth
@@ -102,16 +120,19 @@ variables:
   long_name: congelation ice growth
   units: cm/day
 - name: dagedtd
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: age tendency dynamics
   units: day/day
 - name: dagedtt
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: age tendency thermo
   units: day/day
 - name: daidtd
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: area tendency dynamics
@@ -122,6 +143,7 @@ variables:
   long_name: area tendency dynamics
   units: '%/day'
 - name: daidtt
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: area tendency thermo
@@ -132,11 +154,13 @@ variables:
   long_name: area tendency thermo
   units: '%/day'
 - name: divu
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: strain rate (divergence)
   units: '%/day'
 - name: dvidtd
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: volume tendency dynamics
@@ -147,6 +171,7 @@ variables:
   long_name: volume tendency dynamics
   units: cm/day
 - name: dvidtt
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: volume tendency thermo
@@ -157,36 +182,43 @@ variables:
   long_name: volume tendency thermo
   units: cm/day
 - name: evap
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: evaporative water flux (cpl)
   units: cm/day
 - name: fhocn
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: heat flux ice to ocn (cpl)
   units: W/m2
 - name: flat
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: latent heat flux (cpl)
   units: W/m2
 - name: flat_ai
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: latent heat flux
   units: W/m2
 - name: flwdn
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: down longwave flux
   units: W/m2
 - name: flwup
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: upward longwave flux (cpl)
   units: W/m2
 - name: frazil
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: frazil ice growth
@@ -197,26 +229,31 @@ variables:
   long_name: frazil ice growth
   units: cm/day
 - name: fresh
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: freshwtr flx ice to ocn (cpl)
   units: cm/day
 - name: fsalt
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: salt flux ice to ocn (cpl)
   units: kg/m2/day
 - name: fsens
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: sensible heat flux (cpl)
   units: W/m2
 - name: fsens_ai
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: sensible heat flux
   units: W/m2
 - name: fswabs
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: snow/ice/ocn absorbed solar flux (cpl)
@@ -227,6 +264,7 @@ variables:
   long_name: snow/ice/ocn absorbed solar flux (cpl)
   units: W/m2
 - name: fswdn
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: down solar flux
@@ -247,6 +285,7 @@ variables:
   long_name: surface absorbed shortwave categories
   units: W m-2
 - name: fswthru
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: SW thru ice to ocean (cpl)
@@ -262,6 +301,7 @@ variables:
   long_name: penetrating shortwave categories
   units: W m-2
 - name: fswup
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: upward solar flux
@@ -272,6 +312,7 @@ variables:
   long_name: upward solar flux
   units: W/m2
 - name: hi
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: grid cell mean ice thickness
@@ -282,6 +323,7 @@ variables:
   long_name: grid cell mean ice thickness
   units: m
 - name: hs
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: grid cell mean snow thickness
@@ -292,6 +334,7 @@ variables:
   long_name: grid cell mean snow thickness
   units: m
 - name: ice_present
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: fraction of time-avg interval that ice is present
@@ -302,6 +345,7 @@ variables:
   long_name: fraction of time-avg interval that ice is present
   units: '1'
 - name: meltb
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: basal ice melt
@@ -312,6 +356,7 @@ variables:
   long_name: basal ice melt
   units: cm/day
 - name: meltl
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: lateral ice melt
@@ -322,6 +367,7 @@ variables:
   long_name: lateral ice melt
   units: cm/day
 - name: melts
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: top snow melt
@@ -332,6 +378,7 @@ variables:
   long_name: top snow melt
   units: cm/day
 - name: meltt
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: top ice melt
@@ -342,6 +389,7 @@ variables:
   long_name: top ice melt
   units: cm/day
 - name: rain
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: rainfall rate (cpl)
@@ -352,6 +400,7 @@ variables:
   long_name: rainfall rate (cpl)
   units: cm/day
 - name: shear
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: strain rate (shear)
@@ -542,11 +591,13 @@ variables:
   long_name: sea surface tile term
   units: N m-2
 - name: sig1
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: norm. principal stress 1
   units: '1'
 - name: sig2
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: norm. principal stress 2
@@ -702,6 +753,7 @@ variables:
   long_name: snow mass change from evaporation and sublimation
   units: kg m-2 s-1
 - name: snoice
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: snow-ice formation
@@ -712,6 +764,7 @@ variables:
   long_name: snow-ice formation
   units: cm/day
 - name: snow
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: snowfall rate (cpl)
@@ -722,6 +775,7 @@ variables:
   long_name: snowfall rate (cpl)
   units: cm/day
 - name: snowfrac
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: grid cell mean snow fraction
@@ -732,6 +786,7 @@ variables:
   long_name: grid cell mean snow fraction
   units: '1'
 - name: strairx
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: atm/ice stress (x)
@@ -742,6 +797,7 @@ variables:
   long_name: atm/ice stress (x)
   units: N/m2
 - name: strairy
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: atm/ice stress (y)
@@ -752,21 +808,25 @@ variables:
   long_name: atm/ice stress (y)
   units: N/m2
 - name: strcorx
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: coriolis stress (x)
   units: N/m2
 - name: strcory
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: coriolis stress (y)
   units: N/m2
 - name: strength
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: compressive ice strength
   units: N/m
 - name: strintx
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: internal ice stress (x)
@@ -777,6 +837,7 @@ variables:
   long_name: internal ice stress (x)
   units: N/m2
 - name: strinty
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: internal ice stress (y)
@@ -787,6 +848,7 @@ variables:
   long_name: internal ice stress (y)
   units: N/m2
 - name: strocnx
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: ocean/ice stress (x)
@@ -797,6 +859,7 @@ variables:
   long_name: ocean/ice stress (x)
   units: N/m2
 - name: strocny
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: ocean/ice stress (y)
@@ -807,31 +870,37 @@ variables:
   long_name: ocean/ice stress (y)
   units: N/m2
 - name: strtltx
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: sea sfc tilt stress (x)
   units: N/m2
 - name: strtlty
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: sea sfc tilt stress (y)
   units: N/m2
 - name: uatm
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: atm velocity (x)
   units: m/s
 - name: uvel
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: ice velocity (x)
   units: m/s
 - name: vatm
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: std}
   long_name: atm velocity (y)
   units: m/s
 - name: vicen
+  verified: cesm3
   dims: [time, nc, nj, ni]
   streams: {month_1: MOAR}
   long_name: ice volume categories
@@ -842,6 +911,7 @@ variables:
   long_name: ice volume categories
   units: m
 - name: vsnon
+  verified: cesm3
   dims: [time, nc, nj, ni]
   streams: {month_1: MOAR}
   long_name: snow depth on ice categories
@@ -852,6 +922,7 @@ variables:
   long_name: snow depth on ice categories
   units: m
 - name: vvel
+  verified: cesm3
   dims: [time, nj, ni]
   streams: {month_1: MOAR}
   long_name: ice velocity (y)

@@ -10,33 +10,45 @@
 horiz_dims: [lat, lon]
 dtype_bytes: 4
 
+# This whole file is seeded from LENS2 (CESM2). A name existing here is not
+# evidence it exists in CESM3 -- nobody has checked, for any of these
+# variables, against a real CESM3 history file. `unknown` says so; set a
+# variable to `verified: cesm3` only once one actually has been checked.
+verified: unknown
+
 variables:
 - name: DIRECT_DISCHARGE_TO_OCEAN_ICE
+  verified: cesm3
   dims: [time, lat, lon]
   streams: {month_1: std}
   long_name: 'MOSART direct discharge into ocean: ICE'
   units: m3/s
 - name: DIRECT_DISCHARGE_TO_OCEAN_LIQ
+  verified: cesm3
   dims: [time, lat, lon]
   streams: {month_1: std}
   long_name: 'MOSART direct discharge into ocean: LIQ'
   units: m3/s
 - name: RIVER_DISCHARGE_OVER_LAND_ICE
+  verified: cesm3
   dims: [time, lat, lon]
   streams: {month_1: std}
   long_name: 'MOSART river basin flow: ICE'
   units: m3/s
 - name: RIVER_DISCHARGE_OVER_LAND_LIQ
+  verified: cesm3
   dims: [time, lat, lon]
   streams: {day_1: MOAR, hour_6: MOAR, month_1: std}
   long_name: 'MOSART river basin flow: LIQ'
   units: m3/s
 - name: TOTAL_DISCHARGE_TO_OCEAN_ICE
+  verified: cesm3
   dims: [time, lat, lon]
   streams: {month_1: std}
   long_name: 'MOSART total discharge into ocean: ICE'
   units: m3/s
 - name: TOTAL_DISCHARGE_TO_OCEAN_LIQ
+  verified: cesm3
   dims: [time, lat, lon]
   streams: {hour_6: MOAR, month_1: std}
   long_name: 'MOSART total discharge into ocean: LIQ'

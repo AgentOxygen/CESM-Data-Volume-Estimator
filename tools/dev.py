@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Dev server: serve docs/, and rebuild the bundle whenever data/ changes.
+"""Dev server: serve docs/, and rebuild the bundle whenever data/cmip7_request.yaml changes.
 
 `make dev` runs this. The repo is bind-mounted into the container, so edits on
 the host are visible immediately; this closes the two gaps that leaves:
 
-  * editing data/*.yaml leaves docs/data.json stale until you remember to build
+  * editing the request YAML leaves docs/data.json stale until you remember to build
   * the browser has no idea anything changed
 
 Files are served with no-store so a reload always gets the current bytes, and
@@ -29,12 +29,12 @@ PORT = 8000
 
 
 def snapshot():
-    return {p: p.stat().st_mtime for p in sorted(WATCH.glob("*.yaml"))}
+    return {p: p.stat().st_mtime for p in sorted(WATCH.glob("cmip7_request.yaml"))}
 
 
 def build():
     """Regenerate docs/data.json, reporting either the summary or the error."""
-    done = subprocess.run([sys.executable, str(ROOT / "estimator.py"), "build"],
+    done = subprocess.run([sys.executable, str(ROOT / "build.py")],
                           capture_output=True, text=True)
     stamp = time.strftime("%H:%M:%S")
     if done.returncode == 0:
@@ -74,7 +74,7 @@ def main():
     build()
     threading.Thread(target=watch, daemon=True).start()
     print(f"serving {SERVE.name}/ on http://localhost:{PORT}  "
-          f"(watching {WATCH.name}/*.yaml; the page reloads itself)", flush=True)
+          f"(watching {WATCH.name}/cmip7_request.yaml; the page reloads itself)", flush=True)
     try:
         http.server.ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
     except KeyboardInterrupt:

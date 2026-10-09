@@ -107,6 +107,8 @@ def build_bundle():
             "configs": configs,
             "default_config": [c["key"] for c in configs].index(DEFAULT_CONFIG),
             "per_year": PER_YEAR, "sizes": sizes,
+            "mom_fields": yaml.safe_load((ROOT / "data" / "mom_fields.yaml").read_text()),
+            "cice_fields": yaml.safe_load((ROOT / "data" / "cice_fvars.yaml").read_text()),
             "experiments": doc["experiments"], "requests": requests}
 
 

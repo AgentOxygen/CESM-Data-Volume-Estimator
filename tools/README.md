@@ -28,58 +28,30 @@ library.
 
 ## shot.py — primarily for LLM agents
 
-**This exists so an AI coding agent can see the page it just changed.** A human
-maintainer should just open `make dev` in a browser; that is faster and
-better. The script is here because an agent has no browser, and without it an
-agent editing `docs/index.html` is working blind — it can verify the arithmetic
-with `make test` but cannot tell whether the page actually renders, whether a
-column overflows, or whether a selector silently matched nothing.
-
-It drives headless Chromium over the DevTools Protocol and writes a PNG, and it
-prints the browser console alongside it, so one run reports both the picture and
-any JavaScript error. No Python dependencies — the WebSocket client is inlined.
-A capture takes well under a second.
-
-With no Chromium on `PATH` it falls back to Docker: it runs the public
-`chromedp/headless-shell` image with host networking (DevTools on port 9222, so
-nothing else may be using it), captures, and removes the container. The first run
-pulls the image; later runs add about a second. Pages on the host, such as
-`make dev`'s `http://localhost:8000/`, are reached as `localhost` unchanged.
+This exists so an AI coding agent can see the page it just changed; a human should
+just open `make dev` in a browser. It drives headless Chromium over the DevTools
+Protocol, writes a PNG and prints the browser console, so one run reports both the
+picture and any JavaScript error. No Python dependencies. With no Chromium on `PATH`
+it falls back to the public `chromedp/headless-shell` image (host networking, DevTools
+on port 9222, so nothing else may be using it), pulled on first use and removed after
+each capture; pages on the host, such as `make dev`'s `http://localhost:8000/`, are
+reached as `localhost`.
 
 ```bash
 make dev    # in another terminal
-
-python3 tools/shot.py http://localhost:8000/ -o /tmp/check.png \
-    --wait 'document.querySelector("tr.item")'
-```
-
-`--wait` polls a JS expression until it is truthy, then captures. **Use it** —
-the page builds itself from `data.json` asynchronously, so a capture without it
-photographs "Loading…". The expression may return anything, including a DOM
-element; it is coerced to a boolean inside the browser.
-
-Wait on the DOM rather than on a page variable: top-level `let`/`const` are not
-properties of `window`, so `window.B !== undefined` never becomes true no matter
-how loaded the page is.
-
-`--eval` runs JS once before capture, which is how you photograph a specific
-state rather than the default one. The page reads `?exp=<experiment>` from the
-URL, so most states need no script at all:
-
-```bash
 python3 tools/shot.py 'http://localhost:8000/?exp=historical' -o /tmp/check.png \
     --wait 'document.querySelector("tr.item")'
 ```
 
-Checkbox changes need an explicit `change` event, since setting `.checked` from
-script does not fire one.
+- `--wait JS` polls an expression until truthy before capturing. **Use it**: the page builds
+  itself from `data.json` asynchronously, so a capture without it photographs "Loading…".
+  Wait on the DOM, not on a page variable (top-level `let`/`const` are not `window` properties).
+- `--eval JS` runs script once first, to photograph a specific state. The page reads
+  `?exp=<experiment>` from the URL, so most states need none. Checkbox changes need an explicit
+  `change` event; setting `.checked` does not fire one.
+- `-s WIDTHxHEIGHT` (default 1280x800), `--settle` extra seconds (default 0.3), `--quiet` to drop the console.
 
-Other flags: `-s WIDTHxHEIGHT` (default 1280x800), `--settle` for extra seconds
-of run time before capture (default 0.3), `--quiet` to drop the console output.
-
-The console shows page errors and failed resource loads — a missing `data.json`
-is the usual failure. Requests for `favicon.ico` are filtered out, so anything
-you see is real.
+The console shows page errors and failed resource loads (favicon requests are filtered out).
 
 ## import_cmip7.py — regenerates data/cmip7_request.yaml
 

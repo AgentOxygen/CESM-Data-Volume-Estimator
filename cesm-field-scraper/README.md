@@ -3,7 +3,9 @@
 Reads the CESM `cesm3_0_alpha09e` source and writes YAML listing every
 history field each component can register: name, dims, units, long name,
 and the source line. The Dockerfile is the record of how the YAML was made.
-Nothing here depends on the rest of this repository.
+The scraper depends on nothing else in this repository; the repository's importer
+(`tools/import_cmip7.py`) reads its output, and `compare_logs.py` reads the run logs
+under `../reference/` when they exist.
 
 ```
 make build    # ~2 min: clone CESM at the pinned commit, git-fleximod the six components
@@ -56,35 +58,41 @@ When a name is built at runtime, the record keeps the source expression as
 ## CAM constituents
 
 CAM registers constituent fields (`Q`, `O3`, `SFso4_a1`, `so4_a1_SRF`, …) in
-loops over `cnst_name(m)`. The scraper expands those loops with what a CAM7
-build registers:
+loops over `cnst_name(m)`. The scraper expands those loops with what the
+baseline configuration's CAM build registers:
 
 - `Q`
 - PUMAS's `cnst_names`
-- the species of chemistry package `ghg_mam4`, which `bld/configure` uses
-  by default for `-phys cam7`
+- the species of the chemistry package `CHEM` in `components/cam.py`
+  (`trop_strat_mam5_t4s2`, from the compset's `-chem` option; 154 constituents)
 
 It also expands the per-constituent name arrays built in `constituents.F90`
-(`sflxnam`, `ptendnam`, …). A loop over a subset of constituents still
-expands to all of them, so expanded records can over-claim.
+(`sflxnam`, `ptendnam`, …). An index that names one constituent
+(`call cnst_get_ind('CLDICE', ixcldice)`, then `ptendnam(ixcldice)`) resolves to that one name.
+A loop over a subset of constituents still expands to all of them, so expanded
+records can over-claim; their `alternatives` count says by how much.
 
 ## Checked against a real alpha09e run
 
+`python compare_logs.py` (see Configurations) against the logs of a `B1850C_MTt4s` run, which shares
+the baseline's atmosphere and chemistry, gives for `BHISTE_MTt4s`:
+
 | | names in the log | exact | pattern only | not found |
 |---|---|---|---|---|
-| CAM | 3245 | 45% | 42% | 13% |
-| CTSM | 1922 | 78% | 18% | 5% |
+| CAM | 3245 | 50% | 38% | 12% |
+| CTSM | 1922 | 77% | 19% | 4% |
 | MOSART | 27 | 19% | 81% | 0% |
 | CICE (active subset) | 121 | 100% | – | 0% |
 
-Every CAM name found in the log has a vertical dim that agrees with the
-log's level count. That covers both literal and expanded names, with no
-disagreements.
+CTSM's "not found" names are mostly carbon-isotope variants (`C13_…`, `C14_…`, 44 of 78) and decomposition-cascade
+pools built in nested loops, 18 of them names the log truncates at 32 characters. Nearly all of CAM's (380 of 389) are
+numbered names built with `write(fldname,'(a,i2.2)')` (`AODDUST01`, `TAUXSp12`, …), which the scraper does not expand. Every CAM name found in the log has a
+vertical dim that agrees with the log's level count.
 
-The source also registers fields this run doesn't use. 56% of CAM's
-literal names and 64% of its expanded names aren't in this run's log; they
-come from other dycores, SCAM and debug paths. This tool lists what the
-source *can* register, not what one case *does*.
+The source also registers fields this run doesn't use. The report splits CAM's exact names by how certain the
+source is: about three quarters of names registered by a literal call are in the log, against about a sixth of
+those expanded from large loops, because loops over constituents are decided by data files at run time. This
+tool lists what the source *can* register, not what one case *does*.
 
 ## Configurations
 
@@ -117,6 +125,10 @@ CESM's own `MOM_MARBL_diagnostics.py`, and FATES's `set_history_var` calls.
 cesm_fields/fortran.py      statements, call arguments, literals, name expansion
 cesm_fields/common.py       file walking, record format
 cesm_fields/components/     one module per component
+cesm_fields/config.py       which configuration registers a record (`requires`, `active`)
+cesm_fields/flow.py         namelist-driven pruning of CAM registrations
 cesm_fields/__main__.py     CLI, YAML writer
+configurations.yaml         named configurations (BHISTE_MTt4s)
+compare_logs.py             score a configuration against run logs
 docker/cesm3_0_alpha09e.Dockerfile
 ```

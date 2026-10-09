@@ -2,8 +2,8 @@
 
 Runs entirely against tiny, inline, synthetic CSVs/YAML written to tmp_path
 -- never against the real (local-only, not committed) reference/ data, so
-these pass on a fresh clone with none of it present. See
-notes/cmip7-request-tool-plan.md for the join rules being tested here.
+these pass on a fresh clone with none of it present. The join rules being
+tested are in the docstring of tools/import_cmip7.py.
 """
 
 import csv

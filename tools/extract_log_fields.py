@@ -3,9 +3,8 @@
 A CIME case's component logs each print their own field registry during
 initialization -- independent of what a namelist chose to output, so this
 is closer to "everything this component COULD write" than a history-file
-header is. See notes/cesm-source-scraper-evaluation.md for why this is
-preferable to parsing Fortran source, and the exact log markers each
-component uses.
+header is. It is the "was it really registered in a run" evidence behind
+the `verified` status; cesm-field-scraper reads the source itself.
 
     python tools/extract_log_fields.py
 
@@ -32,9 +31,9 @@ What this *can't* give you, by component:
       names happen to appear in passing NOTE/WARNING lines from the FMS
       diag_manager -- a lucky-dip partial list, not remotely complete.
   glc (CISM), wav
-      Nothing extracted. CISM's real source (see
-      notes/cesm-source-scraper-evaluation.md) is its declarative
-      `*_vars.def` files, not this log; wav isn't one of our 6 components.
+      Nothing extracted. CISM's field definitions are its declarative
+      `*_vars.def` files (cesm-field-scraper reads those), not this log;
+      wav isn't one of our 6 components.
 """
 
 import re
@@ -208,15 +207,14 @@ def main():
         pairs = list(all_pairs)
         print(f"\nocn: {len(pairs)} (module, field) mentions harvested from "
               f"NOTE/WARNING lines -- a partial, lucky-dip list, not a "
-              f"master field list (MOM6 has none in its log; see "
-              f"notes/cesm-source-scraper-evaluation.md)")
+              f"master field list (MOM6 has none in its log)")
         fields = sorted(({"name": f, "module": m} for m, f in pairs), key=lambda d: d["name"])
         result["ocn"] = {"kind": "partial_log_mentions", "fields": fields}
     else:
         print("\nocn: no reference/log_files/ocn.log.* found, skipping")
 
     print("\nglc: not extracted from logs -- use CISM's *_vars.def files instead "
-          "(see notes/cesm-source-scraper-evaluation.md)")
+          "(cesm-field-scraper does)")
 
     if result:
         OUTPUT.parent.mkdir(exist_ok=True)

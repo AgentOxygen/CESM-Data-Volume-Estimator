@@ -16,10 +16,11 @@
 
 ## What this project is
 
-A static web page that turns the CMIP7 data request into per-component lists
+**CESM3-CMIP7-output-planner** (renamed from CESM-Data-Volume-Estimator; the volume estimate is now a
+secondary feature). A static web page that turns the CMIP7 data request into per-component lists
 of CESM3 history variables: pick an experiment, see which variables and
-frequencies each component needs, download one text file per component. Goal
-and workflow: `GOAL.md`. Every mapping carries a status (verified = in a run log / source = registered by
+frequencies each component needs, download the namelists. Workflow and
+status meanings: `README.md`. Every mapping carries a status (verified = in a run log / source = registered by
 the CESM3 source for the baseline configuration / spreadsheet only / missing)
 and a component source (log / source / realm guess) so it can be audited from the page. Full detail in `README.md`.
 
@@ -41,8 +42,8 @@ make shell          # shell in the dev container
 - The GB/yr estimates price a variable as 4 bytes x the grid's cells x the dimensions its CESM3
   source record gives (`build.py` + `data/grids.yaml`/`vertical.yaml`); anything unresolved is
   shown unpriced, not guessed. The old CESM2/LENS2 catalogue (`data/{atm,...}.yaml`) is gone.
-- Plan and design history: `notes/cmip7-namelist-lists-plan.md` (current),
-  `notes/cmip7-request-tool-plan.md` (earlier, partly superseded). Decisions
+- Plan and design history (local-only, in `notes/`): `cesm3-source-catalogue-plan.md` and
+  `cmip7-namelist-export-plan.md` are current; the rest is superseded history. Decisions
   go in the plan doc, not chat history.
 - The LENS2 volume estimator and the CESM2 catalogue are at `main` 2f771c2 /
   `cmip7-request-tool` 12ed4dc / `cesm3-source-catalogue` 1d4f037.

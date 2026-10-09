@@ -1,4 +1,7 @@
-# CMIP7 → CESM3 variable lists
+# CESM3-CMIP7-output-planner
+
+CMIP7 → CESM3 variable lists: plan which history output a CESM3 run needs to satisfy the
+CMIP7 data request, per component, with namelists and a rough data-volume estimate.
 
 A scientist is handed the full CMIP7 data request and has to work out which
 CESM3 history variables to put in each component's namelist. This tool answers,

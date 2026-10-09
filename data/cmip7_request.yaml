@@ -2,8 +2,7 @@
 # reference/cmip7-data-request/{Variable Group,Priority Level}-MASTER.csv +
 # reference/log_files/extracted_fields.yaml + cesm-field-scraper/out (CESM3 source).
 # Do not hand-edit -- regenerate with `make import-cmip7` whenever the CMIP7
-# request CSVs change. See notes/cmip7-request-tool-plan.md for the join
-# rules this encodes.
+# request CSVs change. The join rules are in that script's docstring.
 
 source_configuration: BHISTE_MTt4s
 requests:

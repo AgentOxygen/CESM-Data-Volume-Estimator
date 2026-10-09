@@ -1,7 +1,8 @@
 // Builds a CESM user_nl_* history block from the page's selected rows.
 // Pure functions, no DOM: the page calls Namelist.build(), tests/test_namelist.py
-// drives the same file under node. Sources for every rule below are in
-// notes/cmip7-namelist-export-plan.md (read from the CESM3 source, tag alpha09e).
+// drives the same file under node. Every rule below was read from the CESM3 source (tag
+// alpha09e): CAM cam_history.F90, CTSM histFileMod.F90, MOSART mosart_histfile.F90, CICE
+// ice_history*.F90, CISM namelist_definition_cism.xml, MOM6 cime_config/buildnml and param_templates.
 (function (root) {
   // CMIP7 frequency -> [nhtfrq, mfilt]. Negative nhtfrq = hours; 0 = monthly.
   // -8760 / -87600 assume the 365-day calendar. mfilt is file packaging only.
@@ -32,7 +33,7 @@
     ...(meta.sourceOnly ? [`${comment} ${meta.sourceOnly} line(s) are registered by the CESM3 source${meta.sourceConfiguration ? ` for ${meta.sourceConfiguration}` : ""} but were not seen in a run log (names expanded from loops may not exist in every case).`] : [])];
 
   const header = (c, meta) => [
-    `! Generated ${meta.date || new Date().toISOString().slice(0, 10)} by the CESM Data Volume Estimator (CMIP7 -> CESM3 variable lists).`,
+    `! Generated ${meta.date || new Date().toISOString().slice(0, 10)} by the CESM3-CMIP7-output-planner (CMIP7 -> CESM3 variable lists).`,
     `! ${c.file}: history output for the selection on the page.`,
     ...(meta.title ? [`! ${meta.title}`] : [])];
 
@@ -120,7 +121,7 @@
       ((files[`${r.freq}|${mod}`] ||= { freq: r.freq, mod, fields: [] }).fields).push({ name: r.name, red, tail });
     }
     const keys = Object.keys(files).sort((a, b) => ORDER.indexOf(files[a].freq) - ORDER.indexOf(files[b].freq) || a.localeCompare(b));
-    const L = [`# Generated ${meta.date || new Date().toISOString().slice(0, 10)} by the CESM Data Volume Estimator (CMIP7 -> CESM3 variable lists).`,
+    const L = [`# Generated ${meta.date || new Date().toISOString().slice(0, 10)} by the CESM3-CMIP7-output-planner (CMIP7 -> CESM3 variable lists).`,
       `# ${c.file}: ocean history for the selection on the page. ${meta.title || ""}`,
       `# Copy to SourceMods/src.mom/${c.file} in the case. It REPLACES CESM's default diag_table entirely.`,
       ...evidence(meta, "#"),

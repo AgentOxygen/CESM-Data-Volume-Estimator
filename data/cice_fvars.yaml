@@ -1,6 +1,7 @@
 # CICE history field switches (the f_<name> variables in icefields_*_nml) from
 # components/cice/cime_config/namelist_definition_cice.xml at CESM tag cesm3_0_alpha09e.
-# Frozen list; regenerate by re-running the grep in notes/cmip7-namelist-export-plan.md.
+# Frozen list; regenerate by listing the `<entry id="f_...">` ids of that file in a CESM checkout
+# (cesm-field-scraper's image has one at /cesm).
 # build.py copies it into docs/data.json so the namelist exporter can refuse unknown names.
 - aero
 - afsd

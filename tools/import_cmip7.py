@@ -3,9 +3,8 @@ Level-MASTER.csv) -> data/cmip7_request.yaml
 
 Resolves the CMIP7 data request against CESM3: for each requested CMIP7
 variable, which native CESM history field(s) does it need, does a real run
-log or the CESM3 source register them, and at what priority. See
-notes/cmip7-request-tool-plan.md for the rules this encodes -- in short,
-`Formula`/`Scale` are never read (this prices CESM history output, not the
+log or the CESM3 source register them, and at what priority. The rules,
+in short: `Formula`/`Scale` are never read (this prices CESM history output, not the
 CMIP-side computed value), and a comma-separated `CESM Variable Name` is a
 list of native fields CESM must write separately, not a formula to
 evaluate.
@@ -13,7 +12,7 @@ evaluate.
     python tools/import_cmip7.py
 
 Every token gets a mapping `status` and a `component_source`, so the web app
-can show how each mapping was derived (see notes/cmip7-namelist-lists-plan.md):
+can show how each mapping was derived:
 
     status             verified          named in CESM3_current.csv AND registered
                                          in a real CESM3 run log
@@ -97,8 +96,7 @@ REALM_FALLBACK = {
 
 # CMIP7 Frequency -> our stream name. fx/subhr/dec are deliberately absent:
 # fx is a one-time file with no "per simulated year" at all, and subhr needs
-# a model timestep this tool has never had to track -- see
-# notes/cmip7-request-tool-plan.md, open question 3. Rows at those
+# a model timestep this tool has never had to track. Rows at those
 # frequencies still get their tokens resolved (for visibility) but carry
 # stream: null and are excluded from every total until that's revisited.
 FREQUENCY_STREAMS = {
@@ -403,8 +401,7 @@ HEADER = """\
 # reference/cmip7-data-request/{Variable Group,Priority Level}-MASTER.csv +
 # reference/log_files/extracted_fields.yaml + cesm-field-scraper/out (CESM3 source).
 # Do not hand-edit -- regenerate with `make import-cmip7` whenever the CMIP7
-# request CSVs change. See notes/cmip7-request-tool-plan.md for the join
-# rules this encodes.
+# request CSVs change. The join rules are in that script's docstring.
 
 """
 

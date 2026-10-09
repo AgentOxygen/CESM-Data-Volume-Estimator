@@ -49,7 +49,7 @@ def test_tape_budget_refused():
 
 def test_header_carries_generation_date():
     import re
-    assert re.match(r"! Generated \d{4}-\d{2}-\d{2} by the CESM Data Volume Estimator", build("atm", [])["text"])
+    assert re.match(r"! Generated \d{4}-\d{2}-\d{2} by the CESM3-CMIP7-output-planner", build("atm", [])["text"])
 
 
 def run(expr):

@@ -43,7 +43,7 @@ make shell          # shell in the dev container
   source record gives (`build.py` + `data/grids.yaml`/`vertical.yaml`); anything unresolved is
   shown unpriced, not guessed. The old CESM2/LENS2 catalogue (`data/{atm,...}.yaml`) is gone.
 - Plan and design history (local-only, in `notes/`): `cesm3-source-catalogue-plan.md` and
-  `cmip7-namelist-export-plan.md` are current; the rest is superseded history. Decisions
+  `cmip7-namelist-export-plan.md` are current (`notes/README.md` indexes them); `notes/archive/` is superseded history. Decisions
   go in the plan doc, not chat history.
 - The LENS2 volume estimator and the CESM2 catalogue are at `main` 2f771c2 /
   `cmip7-request-tool` 12ed4dc / `cesm3-source-catalogue` 1d4f037.

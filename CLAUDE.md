@@ -35,12 +35,14 @@ make shell          # shell in the dev container
   gracefully when it is absent.
 - `data/cmip7_request.yaml` and `docs/data.json` are generated and committed;
   regenerate both after changing the importer.
-- `data/{atm,...}.yaml` is the frozen CESM2/LENS2 catalogue, kept only to
-  label mappings as old-CESM2. Do not extend it.
+- `data/{atm,...}.yaml` is the frozen CESM2/LENS2 catalogue. It labels mappings
+  as old-CESM2 and supplies the dimensions behind the GB/yr estimates
+  (`build.py` + `grids.yaml`/`vertical.yaml`). Do not extend it; variables it
+  lacks are shown unpriced, not guessed.
 - Plan and design history: `notes/cmip7-namelist-lists-plan.md` (current),
   `notes/cmip7-request-tool-plan.md` (earlier, partly superseded). Decisions
   go in the plan doc, not chat history.
 - The LENS2 volume estimator that this replaced is at `main` 2f771c2 /
   `cmip7-request-tool` 12ed4dc.
 - Open: log evidence is per component, not per line; the ocn (MOM6) log has no
-  field list; optional data-volume figure not built.
+  field list; volume covers only catalogue-matched variables (~58% of lines).

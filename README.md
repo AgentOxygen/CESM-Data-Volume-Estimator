@@ -33,6 +33,17 @@ A second marker says where the **component** came from: the run `log`, the old
 (`REALM_FALLBACK` in `tools/import_cmip7.py`). `≠realm` flags a variable the
 log put in a different component than its realm implies.
 
+**Time methods.** CMIP7 asks for means, instantaneous values, maxima and minima
+of the same field, and CESM writes each as a separate output. The method comes
+from the compound name (`tavg` → `A`, `tpt` → `I`, `tmax` → `X`, `tmin` → `M`,
+`tsum` → `SUM`; `TIME_METHODS` in `tools/import_cmip7.py`), unless the
+spreadsheet's CESM name carries its own suffix (`O3:i`). Lines are
+`NAME:FLAG freq` for atm and lnd, whose namelists take that suffix; ice, ocn, rof
+and glc get the plain name with the method as a trailing comment, because their
+time methods are set elsewhere. Climatology, diurnal-cycle and monthly-mean-of-daily-extreme
+requests (`tclm`, `tclmdc`, `tmaxavg`, `tminavg`) are written as the nearest
+direct flag with a post-processing caveat shown in the audit view.
+
 Click any row for its audit trail: the raw spreadsheet cell, UID, CSV line,
 priority groups and the logs involved. Each component's **audit .csv** carries
 the same trail for every exported line; the `.txt` itself holds CESM3 names
@@ -58,8 +69,9 @@ test without it; the importer skips itself when its inputs are missing. All
 judgement happens in Python at build time; the page only filters and groups.
 
 `data/{atm,lnd,ocn,ice,rof,glc}.yaml` and `streams.yaml` are the frozen
-CESM2/LENS2 catalogue. Nothing is priced from them any more; they exist only so
-the importer can mark a mapping `↺ old CESM2`. Requests at `fx`, `subhr` and
+CESM2/LENS2 catalogue. They exist so
+the importer can mark a mapping `↺ old CESM2`, and so `build.py` can size
+variables from their dims (`grids.yaml`, `vertical.yaml` hold the grids). Requests at `fx`, `subhr` and
 `dec` frequencies are listed with their CMIP7 label like any other.
 
 ## Limitations
@@ -67,8 +79,12 @@ the importer can mark a mapping `↺ old CESM2`. Requests at `fx`, `subhr` and
 - One experiment at a time; no ensemble or multi-experiment arithmetic.
 - The log evidence is per component, not per line, and the MOM6 (ocn) log has no
   field list, so most ocean variables are `◐` with a `realm` component.
-- No data-volume estimate (the old tool's purpose); it may return as a
-  secondary figure.
+- Volume (GB per simulated year, raw uncompressed, top-right total and a column
+  per line) is secondary and a **lower bound**: it is sized from the old
+  CESM2-era catalogue's dimensions on the chosen grid, so any variable without a
+  catalogue entry (all `◐ spreadsheet only`, some `✓`) and any `fx`/`subhr` line
+  is unpriced and left out. `↺` lines carry CESM2 (POP2) dimensions. The default
+  grid is `ne30pg3_g17` with CAM7 low-top (58 levels).
 
 ## Development
 

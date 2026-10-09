@@ -1,192 +1,39 @@
-# CESM grids and the dimension sizes each component sees on them.
+# The grids the volume estimate offers: how many horizontal cells each component writes, and the size
+# of every other dimension its fields use (the dimension names are the ones in the CESM3 source records).
 #
-# Every number here should ultimately come from `ncdump -h` on a real history
-# file. Numbers that have NOT been checked that way are marked UNVERIFIED --
-# please replace them (and delete the marker) if you have a real file to hand.
+# A history field is priced as  4 bytes x cells x product of its dimension sizes  per time sample.
+# CTSM fields are priced as gridded output (cells), whatever their native subgrid level, because that is
+# what the exported namelist writes. A dimension missing here, or set to null, leaves that line unpriced.
+# `lev` and `ilev` are not listed: they come from data/vertical.yaml.
 #
-# Per component:
-#   horiz   OPTIONAL. Replaces the component's `horiz_dims` (declared in
-#           data/<component>.yaml) wherever they appear in a variable's dims.
-#           This is how an FV grid's [lat, lon] becomes a spectral-element
-#           grid's [ncol] without editing a single variable.
-#   sizes   Every remaining dimension name the component's variables use.
-#           A size of `null` means "this dimension does not exist on this grid";
-#           variables using it are excluded rather than failing the build.
-#
-# `lev` and `ilev` are NOT listed here -- they come from data/vertical.yaml,
-# because vertical resolution is chosen independently of horizontal grid.
-#
-# Adding a grid: copy the closest block, change the sizes, run `make test`.
-# The tests will name any dimension you forgot.
-
-# Dimensions whose size comes from the surface dataset rather than the grid, so
-# any total including them is an estimate. The UI flags these variables.
-approximate_dims: [pft, column, landunit]
-
-# --- shared blocks -----------------------------------------------------------
-
-# COSP satellite-simulator dimensions. Fixed by the COSP configuration, not by
-# the grid. UNVERIFIED.
-_cosp: &cosp
-  cosp_prs: 7
-  cosp_tau: 7
-  cosp_tau_modis: 6
-  cosp_ht: 40
-  cosp_dbze: 15
-  cosp_sr: 15
-  cosp_htmisr: 16
-  cosp_reffice: 6
-  cosp_reffliq: 6
-  cosp_sza: 5
-
-# CLM dimensions that do not depend on the horizontal grid. UNVERIFIED.
-_clm_fixed: &clm_fixed
-  levgrnd: 25
-  levsoi: 20
-  levdcmp: 25
-  levlak: 10
-  natpft: 15
-  cft: 2
-  ltype: 9
-  glc_nec: 10
-  elevclas: 11
-  nvegwcs: 4
-
-# POP2 gx1v7 displaced-pole 1-degree ocean, and the CICE grid that shares it.
-_gx1v7: &gx1v7
-  nlat: 384
-  nlon: 320
-  z_t: 60
-  z_t_150m: 15
-  z_w_top: 60
-  z_w_bot: 60
-  lat_aux_grid: 395   # UNVERIFIED
-  moc_z: 61           # UNVERIFIED
-  moc_comp: 3         # UNVERIFIED
-  transport_reg: 2    # UNVERIFIED
-  transport_comp: 5   # UNVERIFIED
-
-_tx01v3: &tx01v3
-  nlat: 2400
-  nlon: 3600
-  z_t: 62             # UNVERIFIED
-  z_t_150m: 15        # UNVERIFIED
-  z_w_top: 62         # UNVERIFIED
-  z_w_bot: 62         # UNVERIFIED
-  lat_aux_grid: 395   # UNVERIFIED
-  moc_z: 63           # UNVERIFIED
-  moc_comp: 3
-  transport_reg: 2
-  transport_comp: 5
-
-_cice_gx1v7: &cice_gx1v7 {nj: 384, ni: 320, nc: 5}
-_cice_tx01v3: &cice_tx01v3 {nj: 2400, ni: 3600, nc: 5}
-
-_rof_r05: &rof_r05 {lat: 360, lon: 720}
-_glc_gland4: &glc_gland4 {y1: 704, x1: 416}   # CISM Greenland 4 km. UNVERIFIED.
-
-# --- grids -------------------------------------------------------------------
+# Where each number comes from is noted on its line; UNVERIFIED means not yet checked against a real
+# history file's `ncdump -h`.
 
 grids:
 
-  f09_g17:
-    label: f09_g17 - 0.9x1.25 FV atm/lnd, gx1v7 ocn/ice (CESM2 LENS2)
+  ne30pg3_t233:
+    label: ne30pg3_t233 - CAM-SE ~1 deg atm/lnd, tx2_3v3 ocn/ice (CESM3 default)
     atm:
-      sizes:
-        lat: 192
-        lon: 288
-        zlon: 1
-        ncol: null
-        <<: *cosp
+      cells: 48600           # 6 * ne^2 * pg^2 = 6 * 30^2 * 3^2 (ne30np4 is a different grid with 48602)
     lnd:
-      sizes:
-        lat: 192
-        lon: 288
-        ncol: null
-        landunit: 62114   # ESTIMATE -- measure before relying on this
-        column: 233620    # ESTIMATE
-        pft: 623910       # ESTIMATE
-        <<: *clm_fixed
-    ocn: {sizes: {<<: *gx1v7}}
-    ice: {sizes: {<<: *cice_gx1v7}}
-    rof: {sizes: {<<: *rof_r05}}
-    glc: {sizes: {<<: *glc_gland4}}
-
-  f19_g17:
-    label: f19_g17 - 1.9x2.5 FV atm/lnd, gx1v7 ocn/ice
-    atm:
-      sizes:
-        lat: 96
-        lon: 144
-        zlon: 1        # degenerate zonal dim on the zonal-mean fields (Uzm, ...)
-        ncol: null     # finite-volume grid: no spectral-element columns
-        <<: *cosp
-    lnd:
-      sizes:
-        lat: 96
-        lon: 144
-        ncol: null
-        # SUBGRID COUNTS depend on the surface dataset, not the grid, and cannot
-        # be derived -- they must be measured. These are ESTIMATES scaled from
-        # the f09 numbers below and are flagged as approximate in the UI.
-        # See README -> "Calibrating subgrid dimensions".
-        landunit: 15529   # ESTIMATE
-        column: 58405     # ESTIMATE
-        pft: 155978       # ESTIMATE
-        <<: *clm_fixed
-    ocn: {sizes: {<<: *gx1v7}}
-    ice: {sizes: {<<: *cice_gx1v7}}
-    rof: {sizes: {<<: *rof_r05}}
-    glc: {sizes: {<<: *glc_gland4}}
-
-  ne30pg3_g17:
-    label: ne30pg3_g17 - CAM-SE ~1 deg atm/lnd (CESM3), gx1v7 ocn/ice
-    atm:
-      horiz: [ncol]      # replaces [lat, lon] from data/atm.yaml
-      sizes:
-        # UNVERIFIED: ncol = 6 * ne^2 * pg^2 = 6 * 30^2 * 3^2 = 48600.
-        # (ne30np4 is a DIFFERENT grid with 48602 columns -- don't confuse them.)
-        ncol: 48600
-        lat: null        # zonal-mean fields (Uzm, THzm, ...) are excluded here:
-        lon: null        # their zonal-mean latitude axis is not yet known.
-        zlon: 1
-        <<: *cosp
-    lnd:
-      horiz: [ncol]
-      sizes:
-        ncol: 48600
-        lat: null
-        lon: null
-        landunit: 62114   # ESTIMATE
-        column: 233620    # ESTIMATE
-        pft: 623910       # ESTIMATE
-        <<: *clm_fixed
-    ocn: {sizes: {<<: *gx1v7}}
-    ice: {sizes: {<<: *cice_gx1v7}}
-    rof: {sizes: {<<: *rof_r05}}
-    glc: {sizes: {<<: *glc_gland4}}
-
-  ne120pg3_t13:
-    label: ne120pg3_t13 - CAM-SE ~0.25 deg atm/lnd, tx0.1v3 ocn/ice (high res)
-    atm:
-      horiz: [ncol]
-      sizes:
-        ncol: 777600     # UNVERIFIED: 6 * 120^2 * 3^2
-        lat: null
-        lon: null
-        zlon: 1
-        <<: *cosp
-    lnd:
-      horiz: [ncol]
-      sizes:
-        ncol: 777600
-        lat: null
-        lon: null
-        landunit: 993824   # ESTIMATE
-        column: 3737920    # ESTIMATE
-        pft: 9982560       # ESTIMATE
-        <<: *clm_fixed
-    ocn: {sizes: {<<: *tx01v3}}
-    ice: {sizes: {<<: *cice_tx01v3}}
-    rof: {sizes: {<<: *rof_r05}}
-    glc: {sizes: {<<: *glc_gland4}}
+      cells: 48600           # CTSM writes the atmosphere's columns
+      sizes:                 # CTSM constants (UNVERIFIED)
+        levgrnd: 25
+        levsoi: 20
+        levdcmp: 25
+        levlak: 10
+        natpft: 15
+        cft: 2
+        ltype: 9
+        glc_nec: 10
+        elevclas: 11
+        nvegwcs: 4
+    ocn:
+      cells: 259200          # NIGLOBAL x NJGLOBAL = 540 x 480 for tx2_3v2/tx2_3v3 (mom/param_templates/json/MOM_input.json)
+      sizes: {zl: 75, zi: 76}   # NK = 75 for the hycom1 vertical grid that oi%tx2_3v3 uses (config_component.xml); zi = zl + 1
+    ice:
+      cells: 259200          # CICE shares the ocean grid
+      sizes: {nc: 5}         # CICE ice-thickness categories (UNVERIFIED)
+    rof:
+      cells: 259200          # MOSART r05, 360 x 720 (UNVERIFIED)
+    glc: null                # the baseline compset has a data ice sheet: CISM does not run

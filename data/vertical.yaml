@@ -1,20 +1,18 @@
 # Atmosphere vertical configurations.
 #
-# Kept separate from data/grids.yaml because vertical resolution is chosen
-# independently of the horizontal grid -- you can run CAM7's 58 levels on the
-# same f09 grid that CAM6 runs 32 on. The tool offers every grid x vertical
-# combination.
+# Kept separate from data/grids.yaml because vertical resolution is chosen independently of horizontal
+# grid. The tool offers every grid x vertical combination; the default is the baseline's.
 #
 # `lev` is midpoints, `ilev` is interfaces (always lev + 1).
+
+cam7-mt:
+  label: CAM7 middle-top (93 levels)     # BHISTE_MTt4s baseline; atm.log reports 93
+  sizes: {lev: 93, ilev: 94}
+
+cam7-lt:
+  label: CAM7 low-top (58 levels)
+  sizes: {lev: 58, ilev: 59}
 
 cam6:
   label: CAM6 (32 levels)
   sizes: {lev: 32, ilev: 33}
-
-cam7-lt:
-  label: CAM7 low-top (58 levels)     # CESM3 default
-  sizes: {lev: 58, ilev: 59}
-
-cam7-mt:
-  label: CAM7 middle-top (93 levels)
-  sizes: {lev: 93, ilev: 94}

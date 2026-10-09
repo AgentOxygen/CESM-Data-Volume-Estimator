@@ -132,3 +132,83 @@ def test_mosart(tmp_path):
     (rec,) = mosart.scrape(root)
     assert rec["name"] is None and rec["name_patterns"] == ["RIVER_DISCHARGE_OVER_LAND_*"]
 
+
+
+def test_config_requires_and_active():
+    from cesm_fields.config import active, requires
+    assert requires("src/physics/cam/diag.F90:10") == {}
+    assert requires("src/dynamics/fv3/x.F90:1") == {"dycore": ["fv3"]}
+    assert requires("src/chemistry/pp_trop_strat_mam5_t4s2/mo_sim_dat.F90:3") == {"chem": ["trop_strat_mam5_t4s2"]}
+    assert requires("src/control/history_scam.F90:9") == {"scam": [True]}
+    assert requires("src/physics/cam/phys_debug.F90:9") == {"debug": [True]}
+    assert requires("src/fates/main/FatesHistoryInterfaceMod.F90:5") == {"use_fates": [True]}
+    assert requires("source_cism/glc_x.F90:5") == {"cism": [True]}
+    assert requires("src/physics/cam/uwshcu.F90:5") == {"shallow": ["uw"]}
+    cfg = {"dycore": "se", "chem": "trop_strat_mam5_t4s2", "scam": False}
+    assert active({"requires": {"dycore": ["se"]}}, cfg) and active({}, cfg)
+    assert not active({"requires": {"dycore": ["fv3"]}}, cfg)
+    assert not active({"requires": {"scam": [True]}}, cfg)
+    assert not active({"requires": {"use_fates": [True]}}, cfg)          # axis unset = off
+
+
+def test_ctsm_fates(tmp_path):
+    root = tmp_path / ctsm.REPO_PATH
+    write(root, ctsm.FATES, """
+        ! site x size-class/pft
+        index = index + 1
+        call this%dim_kinds(index)%Init(site_size_pft_r8, 2)
+        call this%set_history_var(vname='FATES_NPLANT_SZPF', units='m-2', &
+             long='number of plants per m2 by size x pft', use_default='inactive', &
+             avgflag='A', vtype=site_size_pft_r8, hlms='CLM:ALM', ivar=ivar)
+        """)
+    (r,) = list(ctsm.scrape_fates(root))
+    assert r["name"] == "FATES_NPLANT_SZPF" and r["dims"] == ["size-class", "pft"] and r["horizontal"] == "site"
+    assert r["default"] == "inactive" and r["requires"] == {"use_fates": [True]}
+
+
+def test_mom6_marbl_templates():
+    settings = '''
+         _array_shape : autotroph_cnt
+         sname :
+            default_value :
+               ((autotroph_sname)) == "sp" : sp
+               ((autotroph_sname)) == "diaz" : diaz
+         lname :
+            default_value :
+               ((autotroph_sname)) == "sp" : Small Phyto
+               ((autotroph_sname)) == "diaz" : Diazotroph
+         Nfixer :
+            default_value :
+               default : .false.
+               ((autotroph_sname)) == "diaz" : .true.
+         zooplankton_settings :
+         sname :
+            default_value :
+               ((zooplankton_sname)) == "micro" : micro
+         lname :
+            default_value :
+               ((zooplankton_sname)) == "micro" : Micro
+    '''
+    pfts = mom6.marbl_pfts(settings)
+    assert set(pfts["autotroph"]) == {"sp", "diaz"} and pfts["autotroph"]["diaz"]["flags"]["autotroph_Nfixer"]
+    subs = mom6.marbl_expansions("((autotroph_sname))_Nfix", {"((autotroph_Nfixer))": True}, pfts)
+    assert [mom6.fill("((autotroph_sname))_Nfix", s) for s in subs] == ["diaz_Nfix"]        # only the Nfixer
+    both = mom6.marbl_expansions("graze_((autotroph_sname))_((zooplankton_sname))", {}, pfts)
+    assert sorted(mom6.fill("graze_((autotroph_sname))_((zooplankton_sname))", s) for s in both) == ["graze_diaz_micro", "graze_sp_micro"]
+    assert mom6.fill("POC_FLUX_((particulate_flux_ref_depth_str))", mom6.marbl_expansions("POC_FLUX_((particulate_flux_ref_depth_str))", {}, pfts)[0]) == "POC_FLUX_100m"
+
+
+def test_cam_named_constituent_index_and_list_initialiser(tmp_path):
+    root = tmp_path / cam.REPO_PATH
+    write(root, cam.CONSTITUENT_ARRAYS[0][0], "cnst_names(2) = (/'CLDLIQ', 'CLDICE'/)\n")
+    write(root, cam.CONSTITUENT_ARRAYS[1][0], "solsym(: 1) = (/ 'SO2             ' /)\n")
+    write(root, "src/physics/cam/constituents.F90", "ptendnam(m) = 'PTE'//cnst_name(m)\n")
+    write(root, "src/physics/cam/diag.F90", """
+        character(len=4) :: diag(0:2) = (/'    ', '_d1 ', '_d2 '/)
+        call cnst_get_ind('CLDICE', ixcldice)
+        call addfld(ptendnam(ixcldice), (/ 'lev' /), 'A', 'kg/kg/s', 'x')
+        call addfld('FLUT'//diag(icall), horiz_only, 'A', 'W/m2', 'olr')
+        """)
+    r = {x["name"]: x for x in cam.scrape(root)}
+    assert "PTECLDICE" in r and "PTECLDLIQ" not in r        # one constituent, not all of them
+    assert "FLUT" in r and "FLUT_d1" not in r              # the list initialiser (first entry), not FLUT*

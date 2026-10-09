@@ -19,9 +19,9 @@
 A static web page that turns the CMIP7 data request into per-component lists
 of CESM3 history variables: pick an experiment, see which variables and
 frequencies each component needs, download one text file per component. Goal
-and workflow: `GOAL.md`. Every mapping carries a status (verified / spreadsheet
-only / old CESM2 / missing) and a component source (log / catalogue / realm
-guess) so it can be audited from the page. Full detail in `README.md`.
+and workflow: `GOAL.md`. Every mapping carries a status (verified = in a run log / source = registered by
+the CESM3 source for the baseline configuration / spreadsheet only / missing)
+and a component source (log / source / realm guess) so it can be audited from the page. Full detail in `README.md`.
 
 ```
 make test           # pytest, in Docker
@@ -31,18 +31,21 @@ make dev            # http://localhost:8000, rebuilds + live-reloads on save
 make shell          # shell in the dev container
 ```
 
+- `cesm-field-scraper/out/` (the CESM3 source catalogue, one YAML per component) is local-only
+  and not committed until approved; `tools/import_cmip7.py` reads it like `reference/` and, when
+  absent, statuses rest on the logs alone and no line is priced. `data/aliases.yaml` holds reviewed renames.
 - `reference/` is local-only and not committed. Code that reads it must skip
   gracefully when it is absent.
 - `data/cmip7_request.yaml` and `docs/data.json` are generated and committed;
   regenerate both after changing the importer.
-- `data/{atm,...}.yaml` is the frozen CESM2/LENS2 catalogue. It labels mappings
-  as old-CESM2 and supplies the dimensions behind the GB/yr estimates
-  (`build.py` + `grids.yaml`/`vertical.yaml`). Do not extend it; variables it
-  lacks are shown unpriced, not guessed.
+- The GB/yr estimates price a variable as 4 bytes x the grid's cells x the dimensions its CESM3
+  source record gives (`build.py` + `data/grids.yaml`/`vertical.yaml`); anything unresolved is
+  shown unpriced, not guessed. The old CESM2/LENS2 catalogue (`data/{atm,...}.yaml`) is gone.
 - Plan and design history: `notes/cmip7-namelist-lists-plan.md` (current),
   `notes/cmip7-request-tool-plan.md` (earlier, partly superseded). Decisions
   go in the plan doc, not chat history.
-- The LENS2 volume estimator that this replaced is at `main` 2f771c2 /
-  `cmip7-request-tool` 12ed4dc.
+- The LENS2 volume estimator and the CESM2 catalogue are at `main` 2f771c2 /
+  `cmip7-request-tool` 12ed4dc / `cesm3-source-catalogue` 1d4f037.
 - Open: log evidence is per component, not per line; the ocn (MOM6) log has no
-  field list; volume covers only catalogue-matched variables (~58% of lines).
+  field list; the source catalogue is for one configuration (BHISTE_MTt4s); volume covers only
+  source-resolved variables.

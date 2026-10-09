@@ -1,9 +1,9 @@
 """reference/CESM3_current.csv (+ Variable Group-MASTER.csv, Priority
 Level-MASTER.csv) -> data/cmip7_request.yaml
 
-Resolves the CMIP7 data request against our own catalogue: for each
-requested CMIP7 variable, which native CESM history field(s) does it need,
-do they exist in data/<component>.yaml, and at what priority. See
+Resolves the CMIP7 data request against CESM3: for each requested CMIP7
+variable, which native CESM history field(s) does it need, does a real run
+log or the CESM3 source register them, and at what priority. See
 notes/cmip7-request-tool-plan.md for the rules this encodes -- in short,
 `Formula`/`Scale` are never read (this prices CESM history output, not the
 CMIP-side computed value), and a comma-separated `CESM Variable Name` is a
@@ -17,12 +17,14 @@ can show how each mapping was derived (see notes/cmip7-namelist-lists-plan.md):
 
     status             verified          named in CESM3_current.csv AND registered
                                          in a real CESM3 run log
-                       cesm2             named in the spreadsheet; only the old
-                                         CESM2-seeded data/<comp>.yaml has it
-                       spreadsheet-only  named in the spreadsheet; in no log and
-                                         not in the catalogue
+                       source            not in the log, but the CESM3 source registers
+                                         it for SOURCE_CONFIG (cesm-field-scraper); the
+                                         token's `source_certainty` says how firmly
+                                         (literal name / expanded from a loop / pattern)
+                       spreadsheet-only  named in the spreadsheet; in no log and not in
+                                         the source
                        (missing)         no CESM name in the row -> `tokens: []`
-    component_source   log | catalogue | realm-fallback (REALM_FALLBACK below)
+    component_source   log | source | realm-fallback (REALM_FALLBACK below)
 
 The input CSVs and reference/log_files/extracted_fields.yaml are local-only
 (see reference/.gitignore) and not committed. Missing any of them is not an
@@ -31,6 +33,7 @@ so `make build`/`make test` work for anyone without the reference data.
 """
 
 import csv
+import fnmatch
 import re
 import sys
 from pathlib import Path
@@ -38,21 +41,32 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
-import estimator  # noqa: E402  (needs ROOT on sys.path first)
+
+
+
+class DataError(Exception):
+    """A problem in the input CSVs."""
+
 
 CESM3_CSV = ROOT / "reference" / "CESM3_current.csv"
 VARIABLE_GROUP_CSV = ROOT / "reference" / "cmip7-data-request" / "Variable Group-MASTER.csv"
 PRIORITY_LEVEL_CSV = ROOT / "reference" / "cmip7-data-request" / "Priority Level-MASTER.csv"
 LOG_FIELDS_YAML = ROOT / "reference" / "log_files" / "extracted_fields.yaml"
 OUTPUT = ROOT / "data" / "cmip7_request.yaml"
+ALIASES_YAML = ROOT / "data" / "aliases.yaml"
 
-# CMIP7's 8 "Modelling Realm - Primary" values -> the data/<component>.yaml
-# file(s) that could hold a matching native field, checked in this order.
-# A realm-restricted lookup is required, not optional: 8 names (FLDS, FSDS,
-# NO3, Q, SST, TAUX, TAUY, U10) exist in more than one component's
-# catalogue under different physical meanings, and only the realm says
-# which one a given request row means.
+# The CESM3 source catalogue (local-only output of cesm-field-scraper, like reference/) and the
+# configuration of it that decides which registrations count. Absent => no source evidence, and
+# statuses rest on the run log alone.
+SCRAPER = ROOT / "cesm-field-scraper"
+SOURCE_CONFIG = "BHISTE_MTt4s"
+SOURCE_COMPONENTS = ["atm", "lnd", "ice", "ocn", "glc", "rof"]
+
+# CMIP7's 8 "Modelling Realm - Primary" values -> the component(s) that could
+# register a matching native field, in preference order. A realm-restricted
+# lookup is required, not optional: names such as FLDS, FSDS, NO3, Q, SST,
+# TAUX, TAUY and U10 exist in more than one component under different
+# physical meanings, and only the realm says which one a row means.
 REALM_COMPONENTS = {
     "atmos": ["atm"],
     "aerosol": ["atm"],
@@ -65,7 +79,7 @@ REALM_COMPONENTS = {
 }
 
 # Primary realm -> the single component a token is filed under when neither a
-# log nor the catalogue says where it lives. Draft, for review: every
+# log nor the source says where it lives. Draft, for review: every
 # token placed this way is flagged `component_source: realm-fallback`. Known
 # weak spots: `land` can't tell lnd from rof (rof-only names are caught by the
 # log first), and `landIce` is mostly CISM (glc) names no log covers, though
@@ -174,7 +188,7 @@ def load_group_priorities():
         for row in csv.DictReader(fh):
             level = row["Priority Level"]
             if level not in priority_values:
-                raise estimator.DataError(
+                raise DataError(
                     f"{VARIABLE_GROUP_CSV.name}: group {row['Name']!r} has "
                     f"Priority Level {level!r}, not one of "
                     f"{sorted(priority_values)} in {PRIORITY_LEVEL_CSV.name}")
@@ -191,75 +205,135 @@ def row_priority(row, group_priorities):
     return min(values) if values else None
 
 
-def index_catalogue(catalogue):
-    """{component: {variable name: verified state}}, for a plain name lookup.
-
-    A name can appear twice in one component with different dims (CTSM's
-    gridded/subgrid-vector pairs); `verified` is a file-wide default in
-    practice today (no per-variable override exists in the real data yet),
-    so collapsing to one entry per name loses nothing now. Picking which
-    *dims* variant applies to a given stream is deferred to the estimator.py
-    join (phase 3), which re-reads data/<component>.yaml directly rather
-    than going through this index.
-    """
-    index = {}
-    for component, (_, variables) in catalogue.items():
-        by_name = {}
-        for var in variables:
-            by_name.setdefault(var["name"], var["verified"])
-        index[component] = by_name
-    return index
-
-
-def resolve_token(name, realm, index):
-    """(component, verified) for a native field name, searched only within
-    the component(s) its realm maps to. (None, None) if not found there."""
-    for component in REALM_COMPONENTS.get(realm, []):
-        verified = index[component].get(name)
-        if verified is not None:
-            return component, verified
-    return None, None
-
-
 def load_log_index():
-    """{component: {field names registered in that component's real log}}.
-    extracted_fields.yaml splits names into `matched`/`new` by whether the
-    old catalogue had them -- irrelevant here, so they're re-joined."""
+    """{component: {field names registered in that component's real log}}."""
     with LOG_FIELDS_YAML.open() as fh:
         extracted = yaml.safe_load(fh)
-    return {component: {f["name"] for f in entry.get("matched", []) + entry.get("new", [])}
+    return {component: {f["name"] for f in entry.get("fields", [])}
             for component, entry in extracted.items()}
 
 
-def resolve_mapping(name, realm, log_index, cat_index):
+def load_source_index(scraper=None, config_name=None):
+    """{component: {"exact": {name: (certainty, ref, dims, horizontal)}, "patterns": [(glob, ref)]}} of the
+    registrations CESM3's source makes under one configuration, from cesm-field-scraper/out; None if absent.
+
+    `certainty` is `literal` (a name in a registration call) or `expanded` (one of many a loop expands
+    to, so the run decides). A literal record beats an expanded one for the same name, and one with a
+    horizontal grid beats one without; `dims` are the non-horizontal dimension names (None if unresolved)."""
+    scraper = Path(scraper or SCRAPER)
+    configs, out = scraper / "configurations.yaml", scraper / "out"
+    if not (configs.exists() and out.exists()):
+        return None
+    sys.path.insert(0, str(ROOT / "cesm-field-scraper"))       # its evaluator is the one source of truth for `requires`
+    from cesm_fields.config import active, load
+    config = load(configs, config_name or SOURCE_CONFIG)
+    loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+    index = {}
+    for component in SOURCE_COMPONENTS:
+        path = out / f"{component}.yaml"
+        if not path.exists():
+            continue
+        exact, patterns = {}, []
+        for r in yaml.load(path.read_text(), Loader=loader)["fields"]:
+            if not active(r, config):
+                continue
+            if r["name"]:
+                certainty = "expanded" if "alternatives" in r else "literal"
+                entry = (certainty, r["source"], r.get("dims"), r.get("horizontal"))
+                rank = lambda e: (e[0] == "literal", e[3] is not None)
+                if r["name"] not in exact or rank(entry) > rank(exact[r["name"]]):
+                    exact[r["name"]] = entry
+            else:
+                patterns += [(g, r["source"]) for g in r.get("name_patterns") or []]
+        index[component] = {"exact": exact, "patterns": patterns}
+    return index
+
+
+def source_configuration():
+    """Name of the source configuration the statuses were derived from, or None when no scraper output exists."""
+    return SOURCE_CONFIG if (SCRAPER / "out").exists() and (SCRAPER / "configurations.yaml").exists() else None
+
+
+def load_aliases(path=None):
+    """{spreadsheet CESM name: catalogue name} from the hand-reviewed data/aliases.yaml."""
+    path = Path(path or ALIASES_YAML)
+    return (yaml.safe_load(path.read_text()) or {}).get("aliases", {}) if path.exists() else {}
+
+
+def source_hits(name, src_index):
+    """[(component, "exact"|"pattern", certainty, ref, dims, horizontal)] for the components whose source registers `name`."""
+    hits = []
+    for component, entry in (src_index or {}).items():
+        if name in entry["exact"]:
+            certainty, ref, dims, horizontal = entry["exact"][name]
+            hits.append((component, "exact", certainty, ref, dims, horizontal))
+        else:
+            ref = next((r for g, r in entry["patterns"] if fnmatch.fnmatchcase(name, g)), None)
+            if ref:
+                hits.append((component, "pattern", "pattern", ref, None, None))
+    return hits
+
+
+def alias_candidates(name, aliases):
+    """Names to try for a spreadsheet name, in order: itself, a reviewed alias, then the daily-variant rule.
+
+    The spreadsheet writes a daily CICE field as `siage_d` where CICE has one switch, `f_siage`, that
+    covers every stream; the generic `_d` strip is only used if it finds evidence (the caller checks)."""
+    out = [name]
+    if name in aliases:
+        out.append(aliases[name])
+    if name.endswith("_d"):
+        out.append(name[:-2])
+    return list(dict.fromkeys(out))
+
+
+def resolve_mapping(name, realm, log_index, src_index=None, aliases=None):
     """Everything known about where one native field comes from.
 
-    Log evidence beats the realm: if the log registers `name` in some
-    component, that is the component, and `realm_mismatch` records when the
-    realm would have pointed elsewhere. A field several components register
-    (TSA-style collisions) goes to the first realm-preferred one;
-    `log_components` keeps the full list so the ambiguity is auditable.
+    Evidence, strongest first: the CESM3 run log (`verified`), the CESM3 source (`source`), nothing
+    (`spreadsheet-only`). Log evidence beats the realm: if the log registers `name` in some
+    component, that is the component, and `realm_mismatch` records when the realm would have
+    pointed elsewhere. A field several components register (TSA-style collisions) goes to the first
+    realm-preferred one; `log_components` keeps the full list so the ambiguity is auditable. If
+    `name` itself has no evidence, `alias_candidates` are tried and the first with evidence is used
+    (`alias_of` records which). Source facts about the chosen component (`source_*`, `dims`,
+    `horizontal`) are kept whatever the status, since pricing needs the dims of a logged field too.
     """
     preferred = REALM_COMPONENTS.get(realm, [])
-    log_components = sorted(c for c, names in log_index.items() if name in names)
-    cat_component, cat_state = resolve_token(name, realm, cat_index)
+
+    def evidence(n):
+        return sorted(c for c, names in log_index.items() if n in names), source_hits(n, src_index)
+
+    alias_of, (log_components, hits) = None, evidence(name)
+    if not (log_components or hits):
+        for candidate in alias_candidates(name, aliases or {})[1:]:
+            found = evidence(candidate)
+            if found[0] or found[1]:
+                alias_of, (log_components, hits) = candidate, found
+                break
     in_realm = [c for c in preferred if c in log_components]
+    src_components = [h[0] for h in sorted(hits, key=lambda h: (h[0] not in preferred, h[1] != "exact"))]
     if log_components:
         component = (in_realm or log_components)[0]
         source, status = "log", "verified"
-    elif cat_component:
-        component, source, status = cat_component, "catalogue", "cesm2"
+    elif hits:
+        component, source, status = src_components[0], "source", "source"
     else:
         component = REALM_FALLBACK.get(realm)
         source, status = "realm-fallback", "spreadsheet-only"
+    best = next((h for h in sorted(hits, key=lambda h: h[1] != "exact") if h[0] == component), None)
     return {
         "name": name,
         "status": status,
         "component": component,
         "component_source": source,
         "log_components": log_components,
-        "catalogue_state": cat_state,
         "realm_mismatch": bool(log_components and not in_realm and preferred),
+        "alias_of": alias_of,
+        "source_certainty": best[2] if best else None,
+        "source_ref": best[3] if best else None,
+        "dims": best[4] if best else None,
+        "horizontal": best[5] if best else None,
     }
 
 
@@ -271,9 +345,8 @@ def split_list(cell):
 def build_requests():
     """(requests, experiments): one record per CSV row, plus
     {experiment: [indices into requests]} for the experiment filter."""
-    catalogue, _ = estimator.load_catalogue()
-    cat_index = index_catalogue(catalogue)
     log_index = load_log_index()
+    src_index, aliases = load_source_index(), load_aliases()
     group_priorities = load_group_priorities()
     requests = []
     experiments = {}
@@ -291,7 +364,7 @@ def build_requests():
             prefix, flag, note = time_method(row["CMIP7 Compound Name"])
             tokens = []
             for n, explicit in split_tokens(raw):
-                token = resolve_mapping(n, realm, log_index, cat_index)
+                token = resolve_mapping(n, realm, log_index, src_index, aliases)
                 # An explicit suffix in the spreadsheet's CESM name (O3:i) wins.
                 token["method"] = explicit or flag
                 token["method_source"] = ("cesm-name" if explicit
@@ -319,16 +392,16 @@ def build_requests():
     return requests, dict(sorted(experiments.items()))
 
 
-def render(requests, experiments):
+def render(requests, experiments, source_configuration=None):
     return HEADER + yaml.safe_dump(
-        {"requests": requests, "experiments": experiments}, sort_keys=False,
+        {"source_configuration": source_configuration, "requests": requests, "experiments": experiments}, sort_keys=False,
         default_flow_style=False, allow_unicode=True, width=1000)
 
 
 HEADER = """\
 # GENERATED by `tools/import_cmip7.py` from reference/CESM3_current.csv +
 # reference/cmip7-data-request/{Variable Group,Priority Level}-MASTER.csv +
-# reference/log_files/extracted_fields.yaml.
+# reference/log_files/extracted_fields.yaml + cesm-field-scraper/out (CESM3 source).
 # Do not hand-edit -- regenerate with `make import-cmip7` whenever the CMIP7
 # request CSVs change. See notes/cmip7-request-tool-plan.md for the join
 # rules this encodes.
@@ -354,7 +427,7 @@ def main():
               f"reference/.gitignore). {rel(OUTPUT)} left as-is.")
         return
     requests, experiments = build_requests()
-    OUTPUT.write_text(render(requests, experiments))
+    OUTPUT.write_text(render(requests, experiments, source_configuration()))
     by_status = {}
     for r in requests:
         for t in r["tokens"]:

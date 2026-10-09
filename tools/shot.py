@@ -10,6 +10,11 @@ state. This drives the DevTools Protocol instead, which can do both.
 
 No dependencies: the WebSocket client below is the slice of RFC 6455 that the
 protocol needs.
+
+With no Chromium on PATH it falls back to Docker: it runs the public
+`chromedp/headless-shell` image (host networking, DevTools on port 9222) and
+removes the container afterwards. Pages on the host are reached as
+`localhost`, so `make dev`'s server works unchanged.
 """
 
 from __future__ import annotations
@@ -39,6 +44,9 @@ CHROME_FLAGS = [
     "--no-first-run",
     "--disable-background-timer-throttling",
 ]
+
+
+DOCKER_IMAGE = "chromedp/headless-shell:latest"
 
 
 class WebSocket:
@@ -126,17 +134,26 @@ class Browser:
         binary = next((shutil.which(n) for n in
                        ("chromium", "chromium-browser", "google-chrome-stable",
                         "google-chrome") if shutil.which(n)), None)
-        if not binary:
-            sys.exit("shot: no chromium on PATH")
-        port = random.randint(45000, 60000)
         self.profile = tempfile.mkdtemp(prefix="shot-")
-        self.process = subprocess.Popen(
-            [binary, *CHROME_FLAGS, f"--window-size={self.width},{self.height}",
-             f"--remote-debugging-port={port}", f"--user-data-dir={self.profile}",
-             "about:blank"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.container = None
+        if binary:
+            port = random.randint(45000, 60000)
+            self.process = subprocess.Popen(
+                [binary, *CHROME_FLAGS, f"--window-size={self.width},{self.height}",
+                 f"--remote-debugging-port={port}", f"--user-data-dir={self.profile}",
+                 "about:blank"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif shutil.which("docker"):
+            port = 9222                              # fixed by the image's run.sh
+            self.process = subprocess.Popen(
+                ["docker", "run", "--rm", "--network", "host", DOCKER_IMAGE,
+                 "--hide-scrollbars", f"--window-size={self.width},{self.height}", "about:blank"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            self.container = True
+        else:
+            sys.exit("shot: no chromium on PATH and no docker to fetch one")
 
-        deadline = time.time() + 25
+        deadline = time.time() + (90 if self.container else 25)      # the image may need pulling
         while time.time() < deadline:
             try:
                 with urllib.request.urlopen(
@@ -163,6 +180,11 @@ class Browser:
         sys.exit("shot: the browser never offered a page target")
 
     def __exit__(self, *_) -> None:
+        if self.container:                           # `docker run --rm` stops when the client is killed
+            ids = subprocess.run(["docker", "ps", "-q", "--filter", f"ancestor={DOCKER_IMAGE}"],
+                                 capture_output=True, text=True).stdout.split()
+            if ids:
+                subprocess.run(["docker", "rm", "-f", *ids], capture_output=True)
         self.process.terminate()
         try:
             self.process.wait(timeout=5)

@@ -40,6 +40,12 @@ prints the browser console alongside it, so one run reports both the picture and
 any JavaScript error. No Python dependencies — the WebSocket client is inlined.
 A capture takes well under a second.
 
+With no Chromium on `PATH` it falls back to Docker: it runs the public
+`chromedp/headless-shell` image with host networking (DevTools on port 9222, so
+nothing else may be using it), captures, and removes the container. The first run
+pulls the image; later runs add about a second. Pages on the host, such as
+`make dev`'s `http://localhost:8000/`, are reached as `localhost` unchanged.
+
 ```bash
 make dev    # in another terminal
 
@@ -79,8 +85,8 @@ you see is real.
 
 `make import-cmip7`. Joins the CMIP7 request (`reference/CESM3_current.csv`,
 priority CSVs) to CESM3 run-log field lists
-(`reference/log_files/extracted_fields.yaml`) and the legacy catalogue, writing
-the committed `data/cmip7_request.yaml`. The inputs are local-only; without them
+(`reference/log_files/extracted_fields.yaml`) and the CESM3 source catalogue
+(`cesm-field-scraper/out`), writing the committed `data/cmip7_request.yaml`. The inputs are local-only; without them
 the script prints why and leaves the file alone. See its docstring for the
 status and component-source rules.
 
@@ -88,9 +94,3 @@ status and component-source rules.
 
 Parses the field lists in a real CESM3 run's logs (`reference/log_files/`).
 Run it, then `make import-cmip7`, whenever new logs arrive.
-
-## apply_verified_tags.py — legacy catalogue provenance
-
-Writes `verified: cesm3` into `data/<component>.yaml` for names found in the
-logs. Only the legacy catalogue's own tags depend on it; the web page's
-`verified` status comes straight from the logs via the importer.

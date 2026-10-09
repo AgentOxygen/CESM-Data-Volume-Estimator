@@ -12,7 +12,6 @@ import textwrap
 import pytest
 import yaml
 
-import estimator
 import tools.import_cmip7 as import_cmip7
 
 
@@ -79,114 +78,34 @@ def test_unknown_priority_level_raises(tmp_path, monkeypatch):
                          tmp_path / "Priority Level-MASTER.csv")
     monkeypatch.setattr(import_cmip7, "VARIABLE_GROUP_CSV",
                          tmp_path / "Variable Group-MASTER.csv")
-    with pytest.raises(estimator.DataError, match="Nonexistent"):
+    with pytest.raises(import_cmip7.DataError, match="Nonexistent"):
         import_cmip7.load_group_priorities()
-
-
-# --- realm-scoped catalogue lookup -------------------------------------------
-
-def write_mini_catalogue(tmp_path, monkeypatch):
-    """Six tiny component files, including a name (SST) that collides across
-    atm and ocn under different physical meanings -- the real catalogue has
-    8 of these, which is why the lookup must be realm-scoped, not global."""
-    monkeypatch.setattr(estimator, "DATA", tmp_path)
-    (tmp_path / "streams.yaml").write_text(
-        "month_1: {samples_per_year: 12, label: monthly}\n")
-
-    def write(name, horiz_dims, verified_default, variables):
-        body = {"horiz_dims": horiz_dims, "verified": verified_default,
-                "variables": variables}
-        import yaml
-        (tmp_path / f"{name}.yaml").write_text(yaml.safe_dump(body, sort_keys=False))
-
-    write("atm", ["lat", "lon"], "unknown", [
-        {"name": "TREFHT", "dims": ["time", "lat", "lon"], "streams": {"month_1": "std"}},
-        {"name": "SST", "dims": ["time", "lat", "lon"], "streams": {"month_1": "std"}},
-    ])
-    write("lnd", ["lat", "lon"], "unknown", [
-        {"name": "TSA", "dims": ["time", "lat", "lon"], "streams": {"month_1": "std"}},
-    ])
-    write("rof", ["lat", "lon"], "unknown", [
-        {"name": "RIVER_DISCHARGE_OVER_LAND_LIQ", "dims": ["time", "lat", "lon"],
-         "streams": {"month_1": "std"}},
-    ])
-    write("ocn", ["nlat", "nlon"], "cesm2-only", [
-        {"name": "SST", "dims": ["time", "nlat", "nlon"], "streams": {"month_1": "std"}},
-    ])
-    write("ice", ["nj", "ni"], "unknown", [
-        {"name": "aice", "dims": ["time", "nj", "ni"], "streams": {"month_1": "std"}},
-    ])
-    write("glc", ["y1", "x1"], "unknown", [
-        {"name": "thickness", "dims": ["time", "y1", "x1"], "streams": {"month_1": "std"}},
-    ])
-
-
-def test_realm_scoping_disambiguates_a_colliding_name(tmp_path, monkeypatch):
-    write_mini_catalogue(tmp_path, monkeypatch)
-    catalogue, _ = estimator.load_catalogue()
-    index = import_cmip7.index_catalogue(catalogue)
-    assert import_cmip7.resolve_token("SST", "atmos", index) == ("atm", "unknown")
-    assert import_cmip7.resolve_token("SST", "ocean", index) == ("ocn", "cesm2-only")
-
-
-def test_land_realm_falls_back_to_rof(tmp_path, monkeypatch):
-    write_mini_catalogue(tmp_path, monkeypatch)
-    catalogue, _ = estimator.load_catalogue()
-    index = import_cmip7.index_catalogue(catalogue)
-    assert import_cmip7.resolve_token(
-        "RIVER_DISCHARGE_OVER_LAND_LIQ", "land", index) == ("rof", "unknown")
-    # TSA exists only in lnd -- still found via the same "land" realm.
-    assert import_cmip7.resolve_token("TSA", "land", index) == ("lnd", "unknown")
-
-
-def test_unmapped_realm_resolves_nothing(tmp_path, monkeypatch):
-    write_mini_catalogue(tmp_path, monkeypatch)
-    catalogue, _ = estimator.load_catalogue()
-    index = import_cmip7.index_catalogue(catalogue)
-    assert import_cmip7.resolve_token("TREFHT", "nonsense-realm", index) == (None, None)
 
 
 # --- resolve_mapping: status + component_source -----------------------------
 
-def mini_indexes(tmp_path, monkeypatch):
-    write_mini_catalogue(tmp_path, monkeypatch)
-    catalogue, _ = estimator.load_catalogue()
-    return import_cmip7.index_catalogue(catalogue)
-
-
 LOG_INDEX = {"atm": {"TREFHT", "LOGGED_ONLY"}, "lnd": {"TREFHT", "TSA"}}
 
 
-def test_logged_name_is_verified_and_component_comes_from_log(tmp_path, monkeypatch):
-    cat = mini_indexes(tmp_path, monkeypatch)
-    m = import_cmip7.resolve_mapping("LOGGED_ONLY", "atmos", LOG_INDEX, cat)
+def test_logged_name_is_verified_and_component_comes_from_log():
+    m = import_cmip7.resolve_mapping("LOGGED_ONLY", "atmos", LOG_INDEX)
     assert (m["status"], m["component"], m["component_source"]) == ("verified", "atm", "log")
     assert m["realm_mismatch"] is False
 
 
-def test_log_collision_prefers_the_realm_component_and_keeps_both(tmp_path, monkeypatch):
-    cat = mini_indexes(tmp_path, monkeypatch)
-    m = import_cmip7.resolve_mapping("TREFHT", "land", LOG_INDEX, cat)
+def test_log_collision_prefers_the_realm_component_and_keeps_both():
+    m = import_cmip7.resolve_mapping("TREFHT", "land", LOG_INDEX)
     assert m["component"] == "lnd" and m["log_components"] == ["atm", "lnd"]
 
 
-def test_log_beats_realm_and_flags_the_mismatch(tmp_path, monkeypatch):
-    cat = mini_indexes(tmp_path, monkeypatch)
-    m = import_cmip7.resolve_mapping("TSA", "atmos", LOG_INDEX, cat)
+def test_log_beats_realm_and_flags_the_mismatch():
+    m = import_cmip7.resolve_mapping("TSA", "atmos", LOG_INDEX)
     assert (m["component"], m["component_source"]) == ("lnd", "log")
     assert m["realm_mismatch"] is True
 
 
-def test_catalogue_only_match_is_cesm2(tmp_path, monkeypatch):
-    cat = mini_indexes(tmp_path, monkeypatch)
-    m = import_cmip7.resolve_mapping("SST", "ocean", LOG_INDEX, cat)
-    assert (m["status"], m["component"], m["component_source"], m["catalogue_state"]) == \
-        ("cesm2", "ocn", "catalogue", "cesm2-only")
-
-
-def test_unknown_name_is_spreadsheet_only_with_realm_fallback(tmp_path, monkeypatch):
-    cat = mini_indexes(tmp_path, monkeypatch)
-    m = import_cmip7.resolve_mapping("GHOST", "landIce", LOG_INDEX, cat)
+def test_unknown_name_is_spreadsheet_only_with_realm_fallback():
+    m = import_cmip7.resolve_mapping("GHOST", "landIce", LOG_INDEX)
     assert (m["status"], m["component"], m["component_source"]) == \
         ("spreadsheet-only", "glc", "realm-fallback")
 
@@ -214,7 +133,7 @@ def write_cesm3_csv(tmp_path, rows):
 def write_log_yaml(tmp_path, monkeypatch):
     path = tmp_path / "extracted_fields.yaml"
     path.write_text(yaml.safe_dump({
-        "atm": {"matched": [{"name": "TREFHT"}], "new": [{"name": "LOGGED_ONLY"}]}}))
+        "atm": {"fields": [{"name": "TREFHT"}, {"name": "LOGGED_ONLY"}]}}))
     monkeypatch.setattr(import_cmip7, "LOG_FIELDS_YAML", path)
 
 
@@ -227,7 +146,8 @@ def row(name, raw, realm="atmos", freq="mon", groups="grp_high",
 
 
 def test_build_requests_end_to_end(tmp_path, monkeypatch):
-    write_mini_catalogue(tmp_path, monkeypatch)
+    monkeypatch.setattr(import_cmip7, "SCRAPER", tmp_path / "no-scraper")      # statuses from the log alone
+    monkeypatch.setattr(import_cmip7, "ALIASES_YAML", tmp_path / "no-aliases.yaml")
     write_priority_csvs(tmp_path, monkeypatch)
     write_log_yaml(tmp_path, monkeypatch)
     monkeypatch.setattr(import_cmip7, "CESM3_CSV", write_cesm3_csv(tmp_path, [
@@ -253,7 +173,7 @@ def test_build_requests_end_to_end(tmp_path, monkeypatch):
     assert partial["priority"] == 4
 
     sst = by_name["sst"]
-    assert sst["tokens"][0]["status"] == "cesm2" and sst["priority"] is None
+    assert sst["tokens"][0]["status"] == "spreadsheet-only" and sst["priority"] is None
 
     none = by_name["none"]
     assert none["tokens"] == [] and none["fallback_component"] == "lnd"
@@ -292,13 +212,10 @@ def test_main_skips_without_erroring_when_inputs_missing(tmp_path, monkeypatch, 
          and import_cmip7.LOG_FIELDS_YAML.exists()),
     reason="reference/ CMIP7 CSVs are local-only -- skip where they're absent")
 def test_committed_bundle_is_not_stale():
-    """Catches "the catalogue's verified: tags changed, forgot to
-    regenerate" -- same failure mode `estimator.py`'s own
-    test_bundle_is_not_stale guards against for docs/data.json. This is
-    exactly how data/cmip7_request.yaml went stale once already: applying
-    tools/apply_verified_tags.py changed data/*.yaml without re-running
-    `make import-cmip7`."""
-    current = import_cmip7.render(*import_cmip7.build_requests())
+    """Catches "the evidence the statuses rest on changed (logs, aliases, source
+    catalogue), forgot to regenerate" -- the same failure mode
+    test_bundle_is_not_stale guards against for docs/data.json."""
+    current = import_cmip7.render(*import_cmip7.build_requests(), import_cmip7.source_configuration())
     assert current == import_cmip7.OUTPUT.read_text(), (
         "data/cmip7_request.yaml is out of date -- run `make import-cmip7` "
         "and commit the result.")
@@ -323,3 +240,68 @@ def test_every_derived_method_carries_its_caveat():
 
 def test_explicit_cesm_name_suffix_overrides_the_derived_method():
     assert import_cmip7.split_tokens("O3:i, T") == [("O3", "I"), ("T", None)]
+
+
+# --- source evidence + aliases -------------------------------------------------
+
+def write_scraper(tmp_path):
+    """A tiny cesm-field-scraper tree: one configuration, atm + ice records of every kind."""
+    root = tmp_path / "scraper"
+    (root / "out").mkdir(parents=True)
+    (root / "configurations.yaml").write_text(yaml.safe_dump({"CFG": {"scam": False, "cism": False}}))
+    def rec(name, **kw):
+        return {"name": name, "dims": ["lev"], "horizontal": "physgrid", "source": f"src/x.F90:{kw.pop('line', 1)}", **kw}
+    (root / "out" / "atm.yaml").write_text(yaml.safe_dump({"fields": [
+        rec("LITERAL_SRC"), rec("LOOP_SRC", alternatives=154), rec("LOOP_SRC", line=9),
+        rec("SCAM_ONLY", requires={"scam": [True]}), rec(None, name_patterns=["AOD*"]),
+        rec("IN_BOTH")]}))
+    (root / "out" / "ice.yaml").write_text(yaml.safe_dump({"fields": [rec("siage")]}))
+    return root
+
+
+def source_setup(tmp_path, monkeypatch):
+    monkeypatch.setattr(import_cmip7, "SCRAPER", write_scraper(tmp_path))
+    monkeypatch.setattr(import_cmip7, "SOURCE_CONFIG", "CFG")
+    return import_cmip7.load_source_index()
+
+
+def test_source_index_applies_configuration_and_prefers_literal(tmp_path, monkeypatch):
+    idx = source_setup(tmp_path, monkeypatch)["atm"]
+    assert "SCAM_ONLY" not in idx["exact"]                              # needs scam; the configuration has it off
+    assert idx["exact"]["LOOP_SRC"] == ("literal", "src/x.F90:9", ["lev"], "physgrid")   # the literal record beats the expanded one
+    assert idx["patterns"] == [("AOD*", "src/x.F90:1")]
+
+
+def test_source_index_is_none_without_scraper_output(tmp_path, monkeypatch):
+    monkeypatch.setattr(import_cmip7, "SCRAPER", tmp_path / "nothing")
+    assert import_cmip7.load_source_index() is None and import_cmip7.source_configuration() is None
+
+
+def test_status_source_sits_between_verified_and_spreadsheet_only(tmp_path, monkeypatch):
+    idx = source_setup(tmp_path, monkeypatch)
+    log = {"atm": {"IN_BOTH"}}
+    r = lambda n: import_cmip7.resolve_mapping(n, "atmos", log, idx)
+    assert r("IN_BOTH")["status"] == "verified" and r("IN_BOTH")["component_source"] == "log"
+    lit, loop, pat = r("LITERAL_SRC"), r("LOOP_SRC"), r("AODDUST01")
+    assert (lit["status"], lit["component_source"], lit["source_certainty"], lit["source_ref"]) == ("source", "source", "literal", "src/x.F90:1")
+    assert loop["source_certainty"] == "literal"                          # via the literal record
+    assert (pat["status"], pat["source_certainty"]) == ("source", "pattern")
+    assert r("NOWHERE")["status"] == "spreadsheet-only"
+
+
+def test_daily_suffix_and_reviewed_aliases(tmp_path, monkeypatch):
+    idx = source_setup(tmp_path, monkeypatch)
+    m = import_cmip7.resolve_mapping("siage_d", "seaIce", {}, idx)
+    assert (m["status"], m["alias_of"], m["component"]) == ("source", "siage", "ice")
+    m = import_cmip7.resolve_mapping("renamed", "seaIce", {}, idx, aliases={"renamed": "siage"})
+    assert (m["status"], m["alias_of"]) == ("source", "siage")
+    # a name with its own evidence is never aliased
+    assert import_cmip7.resolve_mapping("siage", "seaIce", {}, idx)["alias_of"] is None
+    # nothing found anywhere stays spreadsheet-only
+    assert import_cmip7.resolve_mapping("nope_d", "seaIce", {}, idx)["status"] == "spreadsheet-only"
+
+
+def test_token_carries_the_source_dims_even_when_the_log_decides_the_status(tmp_path, monkeypatch):
+    idx = source_setup(tmp_path, monkeypatch)
+    m = import_cmip7.resolve_mapping("IN_BOTH", "atmos", {"atm": {"IN_BOTH"}}, idx)
+    assert m["status"] == "verified" and (m["dims"], m["horizontal"]) == (["lev"], "physgrid")

@@ -1,4 +1,4 @@
-"""python -m cesm_fields CESM_CHECKOUT OUT_DIR
+"""python -m cesm_fields CESM_CHECKOUT OUT_DIR [configurations.yaml]
 
 Writes OUT_DIR/<component>.yaml for atm, lnd, ice, ocn, glc, rof.
 """
@@ -9,6 +9,7 @@ from pathlib import Path
 
 import yaml
 
+from . import flow
 from .components import cam, cice, cism, ctsm, mom6, mosart
 
 HEADER = """\
@@ -32,12 +33,17 @@ Dumper.add_representer(list, lambda d, data: d.represent_sequence(
     "tag:yaml.org,2002:seq", data, flow_style=all(isinstance(x, str) for x in data)))
 
 
-def main(cesm, out):
+def main(cesm, out, configurations=None):
     tag = os.environ.get("CESM_TAG", "an unpinned checkout")
+    configs = yaml.safe_load(Path(configurations).read_text()) if configurations else {}
     Path(out).mkdir(parents=True, exist_ok=True)
     for c in [cam, ctsm, cice, mom6, cism, mosart]:
         fields = sorted(c.scrape(Path(cesm) / c.REPO_PATH),
                         key=lambda r: (r["name"] is None, r["name"] or r["name_expr"], r["source"]))
+        if c is cam and configs:                  # which of CAM's registrations each configuration's namelist rules out
+            for cname, config in configs.items():
+                if "cam_config" in config:
+                    flow.mark_inactive(fields, Path(cesm) / c.REPO_PATH, cname, config)
         names = {r["name"] for r in fields if r["name"]}
         summary = {"records": len(fields), "distinct_names": len(names),
                    "unresolved_names": sum(r["name"] is None for r in fields)}

@@ -1,0 +1,5 @@
+# Hand-reviewed: a CESM variable name as the CMIP7 spreadsheet writes it -> the name the CESM3
+# catalogue (source / log) uses. Consulted only when the spreadsheet's own name has no evidence.
+# The daily-variant rule (`siage_d` -> `siage`) is built into tools/import_cmip7.py and is not
+# repeated here; add an entry only for a rename that is not a suffix, with the evidence for it.
+aliases: {}

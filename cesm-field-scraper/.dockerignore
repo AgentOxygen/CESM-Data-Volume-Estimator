@@ -1,3 +1,4 @@
 *
 !cesm_fields
+!configurations.yaml
 cesm_fields/**/__pycache__

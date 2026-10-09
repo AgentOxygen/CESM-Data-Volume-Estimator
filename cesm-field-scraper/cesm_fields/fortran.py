@@ -142,7 +142,7 @@ def assignments(stmts):
     return env
 
 
-MAX_ALTERNATIVES = 64
+MAX_ALTERNATIVES = 400   # the baseline chemistry has 154 constituents; one loop over them must expand
 
 
 def expand(text, env, known=None, depth=0):
@@ -163,10 +163,22 @@ def expand(text, env, known=None, depth=0):
         else:
             ref = re.match(r"^([A-Za-z_]\w*)\s*(\(.*\))?$", part, re.S)
             var = ref.group(1).lower() if ref else None
-            if var in known:
+            index = ref.group(2)[1:-1].strip().lower() if ref and ref.group(2) else None
+            fixed = known.get("__index__", {}).get(index)          # `cnst_name(ixcldice)`: one named constituent
+            if var in known and fixed and var == "cnst_name":
+                options = [fixed]
+            elif var in known.get("__templates__", {}) and fixed:  # `ptendnam(ixcldice)`: its template at that constituent
+                options = sorted({o for rhs in known["__templates__"][var] for o in expand(rhs, {}, {"cnst_name": [fixed]})})
+            elif var in known:
                 options = known[var]
             elif var in env and depth < 3:
-                options = sorted({o for rhs in env[var] for o in expand(rhs, env, known, depth + 1)})
+                # a declaration with a list initialiser (`diag(0:9) = (/'', '_d1', ...)`) is its list of strings
+                options = sorted({o for rhs in env[var] for o in
+                                  (literal_list(rhs) if rhs.lstrip().startswith("(/") and not isinstance(literal_list(rhs), Expr)
+                                   else expand(rhs, env, known, depth + 1))})
+                if var == "diag" and index == "icall":
+                    # radiation's extra diagnostic calls ('_d1'..'_d10') exist only if the namelist asks for them
+                    options = [o for o in options if o == ""] or options
             else:
                 options = ["*"]
         alts = [a + o for a in alts for o in options]

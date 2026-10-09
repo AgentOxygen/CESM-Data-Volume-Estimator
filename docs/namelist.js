@@ -26,6 +26,11 @@
   };
   const q = (s) => `'${s}'`;
   
+  // Evidence lines every generator adds: lines with no CESM3 evidence at all, and lines only the source (not a run) vouches for.
+  const evidence = (meta, comment) => [
+    ...(meta.unverified ? [`${comment} ${meta.unverified} line(s) have no CESM3 source or run-log evidence: an unknown name can abort the run.`] : []),
+    ...(meta.sourceOnly ? [`${comment} ${meta.sourceOnly} line(s) are registered by the CESM3 source${meta.sourceConfiguration ? ` for ${meta.sourceConfiguration}` : ""} but were not seen in a run log (names expanded from loops may not exist in every case).`] : [])];
+
   const header = (c, meta) => [
     `! Generated ${meta.date || new Date().toISOString().slice(0, 10)} by the CESM Data Volume Estimator (CMIP7 -> CESM3 variable lists).`,
     `! ${c.file}: history output for the selection on the page.`,
@@ -45,7 +50,7 @@
       const L = [...header(c, meta),
         ...(variant ? [`! Writes the ${f} variables only (every ${GLC_YEARS[f]} year(s)). CISM has one history stream per run.`,
                  `! Swap this in for ${c.file} to get ${f} output instead of the default file.`] : []),
-        ...(meta.unverified ? [`! ${meta.unverified} line(s) on the page are not verified against a CESM3 run.`] : []),
+        ...evidence(meta, "!"),
         `! esm_history_vars REPLACES CISM's default variable list.`];
       for (const d of dropped) L.push(`! not exported: ${d.name} (${d.freq}): ${d.why}`);
       if (!f) return L.concat("! (nothing to export)").join("\n") + "\n";
@@ -83,7 +88,7 @@
     const L = [...header(c, meta),
       `! CICE cannot switch its defaults off: fields below are ADDED to the model's default output, and these`,
       `! histfreq/histfreq_n REPLACE its stream layout (a default mask such as 'mdhxx' follows the new letters).`,
-      ...(meta.unverified ? [`! ${meta.unverified} line(s) are not verified against a CESM3 run. An unknown f_ name stops namelist read.`] : []),
+      ...evidence(meta, "!"),
       ...notes, ...dropped.map(d => `! not exported: ${d.name} (${d.freq}): ${d.why}`)];
     if (!act.length) return { text: L.concat("! (nothing to export)").join("\n") + "\n", dropped };
     const pad = (a, x) => a.concat(Array(5 - a.length).fill(x)).join(", ");
@@ -118,7 +123,7 @@
     const L = [`# Generated ${meta.date || new Date().toISOString().slice(0, 10)} by the CESM Data Volume Estimator (CMIP7 -> CESM3 variable lists).`,
       `# ${c.file}: ocean history for the selection on the page. ${meta.title || ""}`,
       `# Copy to SourceMods/src.mom/${c.file} in the case. It REPLACES CESM's default diag_table entirely.`,
-      ...(meta.unverified ? [`# ${meta.unverified} line(s) are not verified against a CESM3 run.`] : []),
+      ...evidence(meta, "#"),
       ...(notes.length ? [`# ${notes.length} name(s) are not in CESM's diag_table template and go to ocean_model; MOM6 writes them only if it registers them.`] : []),
       ...dropped.map(d => `# not exported: ${d.name} (${d.freq}): ${d.why}`)];
     if (!keys.length) return { text: L.concat("# (nothing to export)").join("\n") + "\n", dropped };
@@ -172,8 +177,7 @@
     const L = [...header(c, meta),
                c.empty ? `! ${c.empty} = .true. DISCARDS ${comp}'s default output: only the fields below are written.`
                        : `! ${comp} cannot switch its defaults off: the fields below are ADDED to the model's default output.`,
-               ...(meta.unverified ? [`! ${meta.unverified} line(s) are not verified against a CESM3 run. An unknown`,
-                                      `! name in a fincl list aborts the run at initialisation.`] : []),
+               ...evidence(meta, "!"),
                `! nhtfrq assumes a 365-day calendar for yr and dec. Unverified by running a case.`];
     for (const d of dropped) L.push(`! not exported: ${d.name} (${d.freq}): ${d.why}`);
     if (!tapes.length) return { text: L.concat("! (nothing to export)").join("\n") + "\n", tapes, dropped };

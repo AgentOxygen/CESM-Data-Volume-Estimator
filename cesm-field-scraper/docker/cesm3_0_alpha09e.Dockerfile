@@ -23,4 +23,5 @@ RUN pip install --no-cache-dir pyyaml==6.0.2
 ENV CESM_TAG=cesm3_0_alpha09e PYTHONPATH=/opt PYTHONDONTWRITEBYTECODE=1
 COPY --from=source /cesm /cesm
 COPY cesm_fields /opt/cesm_fields
-ENTRYPOINT ["sh", "-c", "cp /cesm/submodules.txt /out/ && python -m cesm_fields /cesm /out"]
+COPY configurations.yaml /opt/configurations.yaml
+ENTRYPOINT ["sh", "-c", "cp /cesm/submodules.txt /out/ && python -m cesm_fields /cesm /out /opt/configurations.yaml"]

@@ -86,6 +86,31 @@ literal names and 64% of its expanded names aren't in this run's log; they
 come from other dycores, SCAM and debug paths. This tool lists what the
 source *can* register, not what one case *does*.
 
+## Configurations
+
+The source registers more than any case writes, so each record may carry `requires`: axis -> allowed
+values, taken from where it was found (`cesm_fields/config.py`: dycore, chemistry package, physics
+options, SCAM, debug, FATES, MARBL, CISM). `configurations.yaml` gives the value of every axis for a
+named case, e.g. `BHISTE_MTt4s`, and `cesm_fields.config.active(record, config)` evaluates it.
+Conditions inside a file (an `if (use_cn)` around a call) are not read.
+
+An expanded record also has `alternatives`: how many names its call site expands to. A large number
+means a loop whose members the run decides (which constituents exist), so treat it as "possible", not "registered".
+
+`python compare_logs.py out ../reference/log_files/extracted_fields.yaml configurations.yaml BHISTE_MTt4s`
+scores a configuration against a real run's log (recall, pattern-only, other-config, missing).
+
+**Namelist-driven pruning (atm).** `cesm_fields/flow.py` reads each configuration's `cam_config`
+(the attributes `bld/configure` would set), resolves `namelist_defaults_cam.xml` to the namelist values, then
+walks the Fortran: `if`/`select case` guards, the call graph from routines nothing calls, derived logicals
+(`is_clubb_scheme = eddy_scheme == 'CLUBB_SGS'`), and the CCPP suite (`suite_<ccpp_suite>.xml` decides which
+scheme files run). A registration the namelist rules out gets `inactive_in: [<configuration>]`.
+It is permissive: a guard on a value it does not know counts as possibly true, so it only removes, never adds.
+
+Besides call-site scraping, two more sources feed `ocn` and `lnd`: MARBL's
+`diagnostics_latest.yaml` (templates expanded per autotroph/zooplankton) together with the output of
+CESM's own `MOM_MARBL_diagnostics.py`, and FATES's `set_history_var` calls.
+
 ## Layout
 
 ```

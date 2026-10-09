@@ -2,15 +2,16 @@
 
     python build.py        # regenerate docs/data.json
 
-All judgement about the mapping (status, component, fallbacks) was made by
-tools/import_cmip7.py and is already in the YAML. The one thing computed here is
-the volume side: each mapped variable that exists in the (CESM2-era) catalogue
-is sized on every grid x vertical configuration, using estimator.py's tested
-arithmetic, so the page only multiplies by samples per year and adds.
+All judgement about the mapping (status, component, fallbacks, dimensions) was
+made by tools/import_cmip7.py and is already in the YAML. The one thing computed
+here is the volume side: each mapped variable whose CESM3 source record gave its
+dimensions is sized on every grid x vertical configuration, so the page only
+multiplies by samples per year and adds.
 
-Volumes are RAW UNCOMPRESSED bytes of one variable in one stream. A line the
-catalogue cannot size (no entry, or an unmodeled frequency) is left out of
-`sizes` / `per_year` and shown as unpriced -- never guessed.
+Volumes are RAW UNCOMPRESSED bytes of one variable in one stream. A line that
+cannot be sized (no source record, an unresolved or unknown dimension, an
+unmodeled frequency) is left out of `sizes` / `per_year` and shown as
+unpriced -- never guessed.
 """
 
 import json
@@ -19,15 +20,13 @@ from pathlib import Path
 
 import yaml
 
-import estimator
-
 ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / "data" / "cmip7_request.yaml"
 BUNDLE = ROOT / "docs" / "data.json"
 
 COMPONENTS = ["atm", "lnd", "ocn", "ice", "rof", "glc"]
-STATUSES = ["verified", "source", "spreadsheet-only", "cesm2"]       # + "missing" (no tokens)
-COMPONENT_SOURCES = ["log", "source", "catalogue", "realm-fallback"]
+STATUSES = ["verified", "source", "spreadsheet-only"]       # + "missing" (no tokens)
+COMPONENT_SOURCES = ["log", "source", "realm-fallback"]
 # Components whose namelists take a `NAME:FLAG` averaging suffix (CAM `fincl`,
 # CTSM `hist_fincl`). CICE, MOM6, MOSART and CISM choose time methods elsewhere.
 COLON_COMPONENTS = ["atm", "lnd"]
@@ -38,57 +37,66 @@ COLON_COMPONENTS = ["atm", "lnd"]
 # so neither has a per-year volume; the page shows those lines as unpriced.
 PER_YEAR = {"yr": 1, "dec": 0.1, "mon": 12, "day": 365,
             "6hr": 1460, "3hr": 2920, "1hr": 8760}
-DEFAULT_CONFIG = "ne30pg3_g17|cam7-lt"        # CESM3's defaults
+DEFAULT_CONFIG = "ne30pg3_t233|cam7-mt"        # the BHISTE_MTt4s baseline
+BYTES = 4                                       # history files are written as 4-byte floats (ndens = 2)
+
+# A source record's `horizontal` token -> whether it is a horizontal grid we can count cells for.
+# CAM's other registered grids (GLL, zonal-mean) have no cell count here. CTSM subgrid levels
+# (pft, column, ...) are priced as the gridded output, which is what the namelist export writes.
+UNPRICED_HORIZONTAL = {"atm": lambda h: h != "physgrid"}
 
 
-def pick_variant(variants, horiz_dims):
-    """A catalogue name can have two records (CTSM gridded vs. subgrid vector).
-    A CMIP7 request wants the gridded field, so prefer the record that carries
-    the component's horizontal dims; otherwise the first."""
-    for v in variants:
-        if all(d in v["dims"] for d in horiz_dims):
-            return v
-    return variants[0]
+def read(name):
+    return yaml.safe_load((ROOT / "data" / name).read_text())
 
 
-def build_sizes(components_and_names):
-    """({"comp|NAME": {b, d, w, a?}}, configs): bytes per time sample on each
-    configuration (null = does not exist there) for every requested field the
-    catalogue has."""
-    catalogue, _ = estimator.load_catalogue()
-    grids_doc = estimator.load("grids.yaml")
-    verticals = estimator.load("vertical.yaml")
-    approx_dims = set(grids_doc.get("approximate_dims", []))
-    configs, resolved = [], []
-    for gname, grid in grids_doc["grids"].items():
-        for vname, vert in verticals.items():
-            key = f"{gname}|{vname}"
-            configs.append({"key": key, "label": f"{grid['label']}  -  {vert['label']}"})
-            resolved.append((key, estimator.resolve_sizes(grid, vert)))
+def bytes_per_sample(component, dims, horizontal, grid, vertical):
+    """(bytes, why): bytes for one time sample on one grid x vertical, or (None, reason)."""
+    spec = grid.get(component)
+    if not spec:
+        return None, f"{component} does not run on this grid"
+    if dims is None:
+        return None, "its dimensions are not resolved in the source"
+    if component in UNPRICED_HORIZONTAL and UNPRICED_HORIZONTAL[component](horizontal):
+        return None, f"it is on the {horizontal} grid, which has no cell count here"
+    sizes = {**vertical["sizes"], **spec.get("sizes", {})}
+    cells = 1 if horizontal is None and component == "ocn" else spec["cells"]
+    total = BYTES * cells
+    for dim in dims:
+        if sizes.get(dim) is None:
+            return None, f"dimension {dim!r} has no size in data/grids.yaml"
+        total *= sizes[dim]
+    return total, None
+
+
+def build_sizes(tokens):
+    """({"comp|NAME": {b, d, x?}}, configs): bytes per time sample on each configuration (null = cannot be
+    sized there) for every requested field whose source record resolved its dimensions."""
+    grids, verticals = read("grids.yaml")["grids"], read("vertical.yaml")
+    configs = [{"key": f"{g}|{v}", "label": f"{gs['label']}  -  {vs['label']}", "grid": g, "vertical": v}
+               for g, gs in grids.items() for v, vs in verticals.items()]
     sizes = {}
-    for component, name in sorted(components_and_names):
-        horiz_dims, variables = catalogue[component]
-        variants = [v for v in variables if v["name"] == name]
-        if not variants:
+    for component, name, dims, horizontal in sorted(tokens, key=lambda t: t[:2]):
+        key = f"{component}|{name}"
+        if key in sizes or dims is None and horizontal is None:
             continue
-        var = pick_variant(variants, horiz_dims)
-        by_config = []
-        for key, by_component in resolved:
-            horiz, dim_sizes = by_component[component]
-            by_config.append(estimator.bytes_per_sample(
-                var, horiz_dims, horiz, dim_sizes, f"config {key}, {component}"))
-        entry = {"b": by_config, "d": [d for d in var["dims"] if d != "time"],
-                 "w": var["dtype_bytes"]}
-        if approx_dims.intersection(var["dims"]):
-            entry["a"] = 1             # size depends on the surface dataset
-        sizes[f"{component}|{name}"] = entry
-    return sizes, configs
+        by_config, why = [], set()
+        for c in configs:
+            b, w = bytes_per_sample(component, dims, horizontal, grids[c["grid"]], verticals[c["vertical"]])
+            by_config.append(b)
+            if w:
+                why.add(w)
+        if any(b is not None for b in by_config):
+            sizes[key] = {"b": by_config, "d": list(dims or [])}
+        elif why:
+            sizes[key] = {"b": by_config, "d": list(dims or []), "x": sorted(why)[0]}
+    return sizes, [{"key": c["key"], "label": c["label"]} for c in configs]
 
 
 def build_bundle():
     doc = yaml.safe_load(SOURCE.read_text())
-    wanted = {(t["component"], t["name"]) for r in doc["requests"] for t in r["tokens"]
-              if t["component"]}
+    wanted = {(t["component"], t["name"], tuple(t["dims"]) if t["dims"] is not None else None, t["horizontal"])
+              for r in doc["requests"] for t in r["tokens"] if t["component"] and (t["dims"] is not None or t["horizontal"])}
     sizes, configs = build_sizes(wanted)
     requests = [{
         "n": r["name"], "u": r["uid"], "l": r["source_line"], "raw": r["raw_cesm_name"],
@@ -97,7 +105,7 @@ def build_bundle():
         "tm": r["time_method"], "mn": r["method_note"],
         "t": [{"n": t["name"], "st": t["status"], "c": t["component"],
                "cs": t["component_source"], "log": t["log_components"],
-               "cat": t["catalogue_state"], "mm": t["realm_mismatch"],
+               "mm": t["realm_mismatch"],
                "m": t["method"], "ms": t["method_source"],
                "sc": t["source_certainty"], "ref": t["source_ref"], "al": t["alias_of"]}
               for t in r["tokens"]],

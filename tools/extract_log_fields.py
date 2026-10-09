@@ -11,15 +11,11 @@ component uses.
 
 Reads whatever `reference/log_files/<component>.log.*` files exist
 (local-only, not committed -- same as every other reference/ input) and
-prints a summary, including a cross-check against data/*.yaml so it's
-obvious which names are new versus already in the catalogue. The full lists
-behind that summary are written to `reference/log_files/extracted_fields.yaml`
-(also local-only -- same gitignore as everything else under reference/) for
-actually reviewing what's new, not just a 5-item sample. Writes nothing to
-data/*.yaml itself -- this is a report to react to, the same way the CMIP7
-coverage numbers were, not an automatic import: nothing here flips a
-`verified:` tag on its own. Missing log files for a component is not an
-error: this is exploratory, run against whatever logs happen to exist.
+prints a summary. The full lists behind it are written to
+`reference/log_files/extracted_fields.yaml` (also local-only -- same
+gitignore as everything else under reference/), which tools/import_cmip7.py
+reads as the "verified" evidence. Missing log files for a component is not an
+error: this is run against whatever logs happen to exist.
 
 What this *can't* give you, by component:
   atm (CAM), lnd (CTSM), rof (MOSART)
@@ -42,15 +38,12 @@ What this *can't* give you, by component:
 """
 
 import re
-import sys
 from collections import OrderedDict
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
-import estimator  # noqa: E402  (needs ROOT on sys.path first)
 
 LOG_DIR = ROOT / "reference" / "log_files"
 OUTPUT = LOG_DIR / "extracted_fields.yaml"
@@ -162,40 +155,20 @@ def flag_truncated(names):
     return [n for n in names if len(n) >= TRUNCATION_SUSPECT_LEN]
 
 
-def catalogue_names():
-    """{component: {name, ...}} from the existing hand-maintained catalogue,
-    for cross-checking what a log turns up against what we already have."""
-    catalogue, _ = estimator.load_catalogue()
-    return {component: {v["name"] for v in variables}
-            for component, (_, variables) in catalogue.items()}
-
-
-def report(component, fields, names, cat_names, extra=""):
-    """Print the summary and return {matched: [...], new: [...]} -- each a
-    list of the full field dicts (with `name` merged in), not just names,
-    so the caller can persist more than a sample."""
-    known = cat_names.get(component, set())
+def report(component, fields, names, extra=""):
+    """Print the summary and return {"fields": [...]} -- the full field dicts
+    (with `name` merged in), sorted by name, so the caller can persist them."""
     by_name = dict(zip(names, fields))
-    matched_names = sorted(n for n in names if n in known)
-    new_names = sorted(n for n in names if n not in known)
     print(f"\n{component}: {len(names)} names found{extra}")
-    print(f"  {len(matched_names)} already in data/{component}.yaml "
-          f"(candidates for verified: cesm3)")
-    print(f"  {len(new_names)} not in data/{component}.yaml at all")
-    if new_names[:5]:
-        print(f"  sample new: {new_names[:5]}")
     suspect = flag_truncated(names)
     if suspect:
         print(f"  {len(suspect)} names >= {TRUNCATION_SUSPECT_LEN} chars, "
               f"possibly truncated by the log's fixed-width format: "
               f"{suspect[:3]}")
-    merged = lambda n: {"name": n, **by_name[n]}
-    return {"matched": [merged(n) for n in matched_names],
-            "new": [merged(n) for n in new_names]}
+    return {"fields": [{"name": n, **by_name[n]} for n in sorted(names)]}
 
 
 def main():
-    cat_names = catalogue_names()
     result = {}
 
     for component, marker in (("atm", "MASTER FIELD LIST"),
@@ -210,7 +183,7 @@ def main():
             fields, names = parse_master_field_list(log.read_text(errors="replace"), marker)
             all_fields.update(zip(names, fields))
         names = list(all_fields)
-        found = report(component, list(all_fields.values()), names, cat_names)
+        found = report(component, list(all_fields.values()), names)
         result[component] = {"kind": "master_field_list", **found}
 
     logs = find_logs("ice")
@@ -220,7 +193,7 @@ def main():
             fields, names = parse_cice_active_fields(log.read_text(errors="replace"))
             all_fields.update(zip(names, fields))
         names = list(all_fields)
-        found = report("ice", list(all_fields.values()), names, cat_names,
+        found = report("ice", list(all_fields.values()), names,
                         extra=" (ACTIVE subset for this run's namelist only -- not a master list)")
         result["ice"] = {"kind": "active_subset", **found}
     else:
@@ -237,17 +210,8 @@ def main():
               f"NOTE/WARNING lines -- a partial, lucky-dip list, not a "
               f"master field list (MOM6 has none in its log; see "
               f"notes/cesm-source-scraper-evaluation.md)")
-        known = cat_names.get("ocn", set())
-        matched = sorted(({"name": f, "module": m} for m, f in pairs if f in known),
-                          key=lambda d: d["name"])
-        new = sorted(({"name": f, "module": m} for m, f in pairs if f not in known),
-                      key=lambda d: d["name"])
-        print(f"  {len(matched)} field names already in data/ocn.yaml "
-              f"(remember: data/ocn.yaml is POP2, verified: cesm2-only -- "
-              f"a name match here is more likely a coincidence than a "
-              f"confirmation)")
-        print(f"  {len(new)} not in data/ocn.yaml")
-        result["ocn"] = {"kind": "partial_log_mentions", "matched": matched, "new": new}
+        fields = sorted(({"name": f, "module": m} for m, f in pairs), key=lambda d: d["name"])
+        result["ocn"] = {"kind": "partial_log_mentions", "fields": fields}
     else:
         print("\nocn: no reference/log_files/ocn.log.* found, skipping")
 
@@ -257,9 +221,8 @@ def main():
     if result:
         OUTPUT.parent.mkdir(exist_ok=True)
         OUTPUT.write_text(
-            "# GENERATED by tools/extract_log_fields.py. Not wired into\n"
-            "# data/*.yaml -- a review artifact, not a build output. See\n"
-            "# notes/cesm-source-scraper-evaluation.md.\n\n"
+            "# GENERATED by tools/extract_log_fields.py from reference/log_files.\n"
+            "# Read by tools/import_cmip7.py as the run-log evidence.\n\n"
             + yaml.safe_dump(result, sort_keys=False, default_flow_style=False,
                               allow_unicode=True, width=1000))
         print(f"\nfull lists written to {OUTPUT.relative_to(ROOT)}")

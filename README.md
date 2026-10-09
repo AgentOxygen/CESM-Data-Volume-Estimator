@@ -24,12 +24,12 @@ page can be audited against the source data:
 | Symbol | Status | Meaning |
 |---|---|---|
 | ✓ | verified | named in `CESM3_current.csv` **and** registered by a real CESM3 run's log |
-| ◐ | spreadsheet only | named in the spreadsheet, not seen in any log |
-| ↺ | old CESM2 mapping | only the CESM2/LENS2-era catalogue has it |
+| ● | in CESM3 source | not in the log, but the CESM3 source registers it for the baseline configuration (BHISTE_MTt4s); the audit view says whether by a literal name, as one name of a loop, or only as a runtime-built pattern, and cites the file and line |
+| ◐ | spreadsheet only | named in the spreadsheet, in neither a log nor the source |
 | ⚠ | missing | the spreadsheet row gives no CESM variable name (listed, never exported) |
 
-A second marker says where the **component** came from: the run `log`, the old
-`catalogue`, or a `realm` guess from the CMIP7 realm column
+A second marker says where the **component** came from: the run `log`, the CESM3
+`source`, or a `realm` guess from the CMIP7 realm column
 (`REALM_FALLBACK` in `tools/import_cmip7.py`). `≠realm` flags a variable the
 log put in a different component than its realm implies.
 
@@ -56,6 +56,7 @@ reference/CESM3_current.csv            the CMIP7 request joined to CESM variable
 reference/cmip7-data-request/*.csv     priority levels, variable groups
 reference/log_files/                   real CESM3 run logs
         │  tools/extract_log_fields.py   → reference/log_files/extracted_fields.yaml
+cesm-field-scraper/out/                the CESM3 source catalogue (cesm-field-scraper; local-only)
         │  tools/import_cmip7.py         (make import-cmip7)
         ▼
 data/cmip7_request.yaml                 committed; every status/component decision lives here
@@ -68,23 +69,25 @@ docs/data.json                          committed; what the page loads
 test without it; the importer skips itself when its inputs are missing. All
 judgement happens in Python at build time; the page only filters and groups.
 
-`data/{atm,lnd,ocn,ice,rof,glc}.yaml` and `streams.yaml` are the frozen
-CESM2/LENS2 catalogue. They exist so
-the importer can mark a mapping `↺ old CESM2`, and so `build.py` can size
-variables from their dims (`grids.yaml`, `vertical.yaml` hold the grids). Requests at `fx`, `subhr` and
-`dec` frequencies are listed with their CMIP7 label like any other.
+`data/grids.yaml` and `data/vertical.yaml` hold the horizontal cell counts and
+other dimension sizes `build.py` prices a variable with (its dimensions come from
+the source catalogue, through the importer). `data/aliases.yaml` holds reviewed
+spreadsheet-name renames; `data/mom_fields.yaml` and `data/cice_fvars.yaml` are
+frozen name lists the namelist export validates against. Requests at `fx`,
+`subhr` and `dec` frequencies are listed with their CMIP7 label like any other.
 
 ## Limitations
 
 - One experiment at a time; no ensemble or multi-experiment arithmetic.
 - The log evidence is per component, not per line, and the MOM6 (ocn) log has no
-  field list, so most ocean variables are `◐` with a `realm` component.
+  field list; ocean variables are mostly `●` from the MOM6 and MARBL source.
 - Volume (GB per simulated year, raw uncompressed, top-right total and a column
-  per line) is secondary and a **lower bound**: it is sized from the old
-  CESM2-era catalogue's dimensions on the chosen grid, so any variable without a
-  catalogue entry (all `◐ spreadsheet only`, some `✓`) and any `fx`/`subhr` line
-  is unpriced and left out. `↺` lines carry CESM2 (POP2) dimensions. The default
-  grid is `ne30pg3_g17` with CAM7 low-top (58 levels).
+  per line) is secondary and a **lower bound**: 4 bytes times the grid's cells
+  times the dimensions the CESM3 source gives the field, so any variable the
+  source did not resolve (all `◐ spreadsheet only`), any dimension without a size
+  in `data/grids.yaml`, and any `fx`/`subhr` line is unpriced and left out. Land
+  fields are priced as gridded output. The default is `ne30pg3_t233` (CAM-SE
+  ~1°, tx2_3v3 ocean) with CAM7 middle-top (93 levels).
 
 ## Development
 
@@ -103,7 +106,6 @@ either is stale.
 
 ```
 build.py             data/cmip7_request.yaml → docs/data.json
-estimator.py         legacy-catalogue loader (used only by the importer)
 tools/               importer, log extractor, dev server, screenshot helper — see tools/README.md
 tests/               pytest suite
 docs/index.html      the page: one file, vanilla JS

@@ -6,7 +6,7 @@
 <title>CMIP7 to CESM3 Variable Lists</title>
 <style>
   :root { --line: #d8dce2; --muted: #666; --bg: #fff; --head: #f6f7f9; --accent: #1a5fb4;
-          --ok: #1b7a3a; --warn: #b06000; --bad: #b3261e; --legacy: #6b4fa0; }
+          --ok: #1b7a3a; --warn: #b06000; --bad: #b3261e; }
   * { box-sizing: border-box; }
   body { margin: 0; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
          color: #1a1a1a; background: var(--bg); }
@@ -28,7 +28,7 @@
   .legend { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 18px; }
   .sym { display: inline-block; min-width: 1.2em; text-align: center; font-weight: 700; }
   .s-verified { color: var(--ok); } .s-source { color: var(--ok); opacity: .75; } .s-spreadsheet-only { color: var(--warn); }
-  .s-cesm2 { color: var(--legacy); } .s-missing { color: var(--bad); }
+  .s-missing { color: var(--bad); }
   .pill { font: 10px ui-monospace, Menlo, monospace; padding: 1px 6px; border-radius: 8px;
           border: 1px solid var(--line); color: var(--muted); margin-left: 3px; }
   .pill.realm-fallback { border-color: var(--warn); color: var(--warn); }
@@ -56,7 +56,6 @@
   #total b { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
   #total button { margin-top: 4px; font-size: 12px; }
   #total span { display: block; font-size: 11px; color: var(--muted); }
-  .approx { color: var(--warn); }
   .note { font-size: 12px; color: var(--muted); margin-top: 6px; }
   .hint { color: var(--muted); padding: 24px 4px; }
 </style>
@@ -83,17 +82,15 @@
       <label><input type="checkbox" data-k="st" value="source" checked>
         <span class="sym s-source">&#9679;</span> registered in CESM3 source (not in the log) <i id="n-source"></i></label>
       <label><input type="checkbox" data-k="st" value="spreadsheet-only">
-        <span class="sym s-spreadsheet-only">&#9680;</span> spreadsheet only (not in log) <i id="n-spreadsheet-only"></i></label>
-      <label><input type="checkbox" data-k="st" value="cesm2">
-        <span class="sym s-cesm2">&#8634;</span> old CESM2 mapping <i id="n-cesm2"></i></label>
+        <span class="sym s-spreadsheet-only">&#9680;</span> spreadsheet only (not in log or source) <i id="n-spreadsheet-only"></i></label>
       <label><input type="checkbox" data-k="st" value="missing">
         <span class="sym s-missing">&#9888;</span> missing mapping <i id="n-missing"></i></label>
     </div>
     <div class="row"><span class="lbl">component from</span>
-      <label><input type="checkbox" data-k="cs" value="log" checked> CESM3 log <i id="n-log"></i></label>
-      <label><input type="checkbox" data-k="cs" value="catalogue" checked> old catalogue <i id="n-catalogue"></i></label>
+      <label><input type="checkbox" data-k="cs" value="log" checked> CESM3 log <i id="n-cs-log"></i></label>
+      <label><input type="checkbox" data-k="cs" value="source" checked> CESM3 source <i id="n-cs-source"></i></label>
       <label><input type="checkbox" data-k="cs" value="realm-fallback" checked>
-        <span class="pill realm-fallback">realm</span> CMIP7 realm guess <i id="n-realm-fallback"></i></label>
+        <span class="pill realm-fallback">realm</span> CMIP7 realm guess <i id="n-cs-realm-fallback"></i></label>
     </div>
   </div>
 
@@ -108,17 +105,16 @@
   <div class="legend">
     <span><span class="sym s-verified">&#10003;</span> in spreadsheet and registered by a CESM3 run</span>
     <span><span class="sym s-source">&#9679;</span> registered by the CESM3 source for the baseline configuration, not seen in the run log</span>
-    <span><span class="sym s-spreadsheet-only">&#9680;</span> in spreadsheet, not seen in any log</span>
-    <span><span class="sym s-cesm2">&#8634;</span> found only in the CESM2-era catalogue</span>
+    <span><span class="sym s-spreadsheet-only">&#9680;</span> in spreadsheet, in neither a log nor the CESM3 source</span>
     <span><span class="sym s-missing">&#9888;</span> spreadsheet gives no CESM name</span>
     <span><span class="pill mm">&ne;realm</span> log put it in a different component than its realm implies</span>
     <span>Click a row to audit it.</span>
   </div>
   <div class="note">Sizes are GB (10<sup>9</sup> bytes) per simulated year, raw uncompressed, one line per
-    variable and frequency. They come from the old CESM2-era catalogue&rsquo;s dimensions on the chosen grid, so
-    <span class="approx">&asymp;</span> marks sizes that depend on the surface dataset and &#8634; lines carry CESM2 dimensions.
-    Lines with no catalogue entry or an unmodeled frequency (fx, subhr) are unpriced (&ndash;) and left out of the total,
-    which is therefore a lower bound.</div>
+    variable and frequency: 4 bytes &times; horizontal cells &times; the field&rsquo;s other dimensions, which come
+    from the CESM3 source record on the chosen grid. Land fields are priced as gridded output.
+    Lines with no source record, an unsized dimension or an unmodeled frequency (fx, subhr) are unpriced (&ndash;) and
+    left out of the total, which is therefore a lower bound.</div>
 </header>
 
 <div id="total"><b id="tot">&ndash;</b> GB/yr<span id="totnote"></span>
@@ -130,9 +126,9 @@
 <script>
 let B;
 const state = { exp: "", tier: "all", st: new Set(), cs: new Set(), noFreq: new Set(), noRealm: new Set(), cfg: 0 };
-const GLYPH = { "verified": "&#10003;", "source": "&#9679;", "spreadsheet-only": "&#9680;", "cesm2": "&#8634;", "missing": "&#9888;" };
+const GLYPH = { "verified": "&#10003;", "source": "&#9679;", "spreadsheet-only": "&#9680;", "missing": "&#9888;" };
 const LABEL = { "verified": "verified", "source": "in CESM3 source", "spreadsheet-only": "spreadsheet only",
-                "cesm2": "old CESM2 mapping", "missing": "missing mapping" };
+                "missing": "missing mapping" };
 // CESM history averaging flags (the `:X` in a CAM/CTSM fincl entry).
 const METHOD = { A: "mean", I: "instantaneous", X: "maximum", M: "minimum", SUM: "sum" };
 const colon = (c) => B.colon_components.includes(c);
@@ -156,14 +152,12 @@ function explain(t, r) {
       ({ literal: "by a literal name", expanded: "as one of many names a loop expands to (the run decides which exist)",
          pattern: "only as a runtime-built name matching a pattern" }[t.sc] || "") + ` at <code>${esc(t.ref)}</code>` +
       (t.al ? `; matched through the name <code>${esc(t.al)}</code>` : ""),
-    "spreadsheet-only": `named in ${where}; no CESM3 log registers it and the old catalogue lacks it`,
-    "cesm2": `named in ${where}; no CESM3 log has it, but the old CESM2-era catalogue does (state: ${esc(t.cat)})`,
+    "spreadsheet-only": `named in ${where}; neither a CESM3 log nor the CESM3 source (for ${esc(B.source_configuration)}) registers it`,
   }[t.st];
   const comp = {
     "log": `component <b>${t.c}</b> from the log` + (t.log.length > 1 ? ` (registered by ${esc(logs)}; first realm-preferred taken)` : ""),
     "source": `component <b>${t.c}</b> from the CESM3 source`,
-    "catalogue": `component <b>${t.c}</b> from the old catalogue (realm ${esc(r.realm)})`,
-    "realm-fallback": `component <b>${t.c}</b> guessed from CMIP7 realm <code>${esc(r.realm)}</code> &mdash; no log or catalogue entry`,
+    "realm-fallback": `component <b>${t.c}</b> guessed from CMIP7 realm <code>${esc(r.realm)}</code> &mdash; no log or source entry`,
   }[t.cs];
   return `${status}.<br>${comp}.` + (t.mm ? ` <span class="pill mm">&ne;realm</span> realm ${esc(r.realm)} would have implied a different component.` : "");
 }
@@ -172,14 +166,14 @@ function explain(t, r) {
 
 const fmtGB = (gb) => gb < 0.005 ? "<0.01" : gb >= 100 ? Math.round(gb).toLocaleString() : gb.toFixed(2);
 
-// {gb, approx} for one (component, variable, frequency) line, or {why} if it cannot be priced.
+// {gb} for one (component, variable, frequency) line, or {why} if it cannot be priced.
 function price(c, name, freq) {
   const s = B.sizes[c + "|" + name], per = B.per_year[freq];
-  if (!s) return { why: "no entry for this variable in the catalogue, so no dimensions to size it from" };
+  if (!s) return { why: "no CESM3 source record gave this variable's dimensions" };
   if (per === undefined) return { why: `frequency ${freq} has no per-year volume (one-off or timestep-dependent)` };
   const b = s.b[state.cfg];
-  if (b === null) return { why: "does not exist on the chosen grid" };
-  return { gb: b * per / 1e9, approx: !!s.a, bytes: b, per, s };
+  if (b === null) return { why: s.x || "cannot be sized on the chosen grid" };
+  return { gb: b * per / 1e9, bytes: b, per, s };
 }
 
 // --- selection --------------------------------------------------------------
@@ -195,8 +189,8 @@ function selected() {
 function compute() {
   const comps = {}, missing = {};
   for (const c of B.components) { comps[c] = new Map(); missing[c] = []; }
-  const counts = { "verified": 0, "source": 0, "spreadsheet-only": 0, "cesm2": 0, "missing": 0,
-                   "log": 0, "catalogue": 0, "realm-fallback": 0 };
+  const counts = { "verified": 0, "source": 0, "spreadsheet-only": 0, "missing": 0,
+                   "cs-log": 0, "cs-source": 0, "cs-realm-fallback": 0 };
   const reqs = selected();
   for (const r of reqs) {
     if (state.noFreq.has(r.f) || state.noRealm.has(r.realm)) continue;
@@ -206,7 +200,7 @@ function compute() {
       continue;
     }
     for (const t of r.t) {
-      counts[t.st]++; counts[t.cs]++;
+      counts[t.st]++; counts["cs-" + t.cs]++;
       if (!state.st.has(t.st) || !state.cs.has(t.cs)) continue;
       const key = t.n + "|" + (t.m || "") + "|" + r.f, m = comps[t.c];
       if (!m.has(key)) m.set(key, { key, name: t.n, method: t.m, freq: r.f, items: [] });
@@ -255,7 +249,7 @@ function render() {
         `<td class="cm">${esc(names.slice(0, 2).join("  ·  "))}${names.length > 2 ? `  · +${names.length - 2} more` : ""}</td>` +
         (row.p.gb === undefined
           ? `<td class="sz none" title="${esc(row.p.why)}">&ndash;</td></tr>`
-          : `<td class="sz">${row.p.approx ? '<span class="approx" title="size depends on the surface dataset">&asymp;</span> ' : ""}${esc(fmtGB(row.p.gb))} GB/yr</td></tr>`));
+          : `<td class="sz">${esc(fmtGB(row.p.gb))} GB/yr</td></tr>`));
     });
     for (const r of miss) {
       parts.push(`<tr class="item" data-miss="${esc(r.n)}"><td>${sym("missing")}${srcPill("realm-fallback")}</td>` +
@@ -269,9 +263,9 @@ function render() {
 function sizeHtml(c, row) {
   const p = row.p;
   if (p.gb === undefined) return `<div class="src"><b>size:</b> unpriced &mdash; ${esc(p.why)}.</div>`;
-  return `<div class="src"><b>size:</b> catalogue dims <code>[${esc(p.s.d.join(", "))}]</code> &times; ${p.s.w} B = ` +
+  return `<div class="src"><b>size:</b> 4 B &times; cells &times; source dims <code>[${esc(p.s.d.join(", "))}]</code> = ` +
     `${p.bytes.toLocaleString()} bytes/sample on ${esc(B.configs[state.cfg].key)} &times; ${p.per}/yr = ` +
-    `${esc(fmtGB(p.gb))} GB/yr${p.approx ? " (&asymp; surface-dataset dims)" : ""}.</div>`;
+    `${esc(fmtGB(p.gb))} GB/yr.</div>`;
 }
 
 function methodHtml(r, t) {
@@ -347,11 +341,11 @@ function download(kind, c) {
       (r.method && !colon(c) ? `  # ${METHOD[r.method]}` : ""))).join("\n") + "\n", base + "_vars.txt", "text/plain");
   } else {
     const cols = ["variable", "base_variable", "time_method", "method_source", "method_note", "frequency", "status", "component_source", "realm_mismatch", "compound_name",
-                  "uid", "csv_line", "raw_cesm_variable_name", "priority", "groups", "log_components", "catalogue_state", "gb_per_year"];
+                  "uid", "csv_line", "raw_cesm_variable_name", "priority", "groups", "log_components", "source_certainty", "source_ref", "gb_per_year"];
     const lines = [cols.join(",")];
     for (const row of rows) for (const { r, t } of row.items)
       lines.push([cesmName(c, row), row.name, row.method || "", t.ms || "", r.mn || "", row.freq, t.st, t.cs, t.mm, r.n, r.u, r.l, r.raw, r.p ? PRIORITY[r.p] : "",
-                  r.g.join(";"), t.log.join(";"), t.cat || "",
+                  r.g.join(";"), t.log.join(";"), t.sc || "", t.ref || "",
                   row.p.gb === undefined ? "" : row.p.gb].map(csvCell).join(","));
     save(lines.join("\n") + "\n", base + "_audit.csv", "text/csv");
   }

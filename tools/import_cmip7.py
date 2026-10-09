@@ -96,8 +96,52 @@ FREQUENCY_STREAMS = {
     "1hr": "hour_1",
 }
 
+# CMIP7 time method (the first dash-separated piece of a compound name's
+# branding, e.g. `tavg` in `atmos.tas.tavg-h2m-hxy-u.day.glb`) -> CESM history
+# averaging flag, the `:X` in a CAM/CTSM `fincl` entry. Each CESM flag is a
+# separate output field, so the same native variable requested as a mean and as
+# a maximum is two lines. The second element is a caveat shown in the audit view
+# where CESM cannot write the requested quantity directly.
+TIME_METHODS = {
+    "tavg": ("A", None),
+    "tpt": ("I", None),
+    "tmax": ("X", None),
+    "tmin": ("M", None),
+    "tsum": ("SUM", None),
+    "ti": (None, "time-invariant: no averaging flag"),
+    "tclm": ("A", "climatology: written as a mean; the climatology is formed in post-processing"),
+    "tclmdc": ("A", "diurnal-cycle climatology: written as a mean; formed in post-processing"),
+    "tmaxavg": ("X", "monthly mean of the daily maximum: CESM writes the daily maximum (X); "
+                     "averaging to monthly is post-processing, and the frequency here is the requested one"),
+    "tminavg": ("M", "monthly mean of the daily minimum: CESM writes the daily minimum (M); "
+                     "averaging to monthly is post-processing, and the frequency here is the requested one"),
+}
+
+
+def time_method(compound_name):
+    """(prefix, flag, note) from a compound name's branding piece."""
+    prefix = compound_name.split(".")[2].split("-")[0]
+    flag, note = TIME_METHODS[prefix]
+    return prefix, flag, note
+
+
 _BRACKET_TAG = re.compile(r"\[[^\]]*\]")
 _AVGFLAG_SUFFIX = re.compile(r":[A-Za-z]$")
+
+
+def split_tokens(raw):
+    """`CESM Variable Name` -> [(native field, explicit avgflag or None)]."""
+    if not raw or not raw.strip() or raw.strip().upper() == "N/A":
+        return []
+    cleaned = _BRACKET_TAG.sub("", raw)
+    out = []
+    for part in re.split(r"[,+]", cleaned):
+        part = part.strip()
+        flag = _AVGFLAG_SUFFIX.search(part)
+        name = _AVGFLAG_SUFFIX.sub("", part).strip()
+        if name:
+            out.append((name, flag.group()[1:].upper() if flag else None))
+    return out
 
 
 def normalize_tokens(raw):
@@ -112,18 +156,7 @@ def normalize_tokens(raw):
     whole request, `SFbc_a4 + bc_a4_CLXF`, handled the same way as a
     comma-list.
     """
-    if not raw or not raw.strip() or raw.strip().upper() == "N/A":
-        return []
-    cleaned = _BRACKET_TAG.sub("", raw)
-    tokens = []
-    for part in re.split(r"[,+]", cleaned):
-        part = part.strip()
-        if not part:
-            continue
-        part = _AVGFLAG_SUFFIX.sub("", part).strip()
-        if part:
-            tokens.append(part)
-    return tokens
+    return [name for name, _ in split_tokens(raw)]
 
 
 def load_priority_values():
@@ -255,8 +288,15 @@ def build_requests():
             realm = row.get("Modelling Realm - Primary", "")
             frequency = row.get("CMIP7 Frequency", "")
             raw = row.get("CESM Variable Name", "")
-            tokens = [resolve_mapping(n, realm, log_index, cat_index)
-                      for n in normalize_tokens(raw)]
+            prefix, flag, note = time_method(row["CMIP7 Compound Name"])
+            tokens = []
+            for n, explicit in split_tokens(raw):
+                token = resolve_mapping(n, realm, log_index, cat_index)
+                # An explicit suffix in the spreadsheet's CESM name (O3:i) wins.
+                token["method"] = explicit or flag
+                token["method_source"] = ("cesm-name" if explicit
+                                          else "compound-name" if flag else None)
+                tokens.append(token)
             groups = split_list(row.get("CMIP7 Variable Groups", ""))
             requests.append({
                 "name": row["CMIP7 Compound Name"],
@@ -270,6 +310,8 @@ def build_requests():
                 "groups": groups,
                 # Where a row with no tokens at all would be filed.
                 "fallback_component": REALM_FALLBACK.get(realm),
+                "time_method": prefix,
+                "method_note": note,
                 "tokens": tokens,
             })
             for experiment in split_list(row.get("List of Experiments", "")):

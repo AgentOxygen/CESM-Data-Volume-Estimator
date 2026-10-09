@@ -1,9 +1,10 @@
-"""Load and validate the legacy CESM2/LENS2-seeded history-field catalogue.
+"""Load and validate the CESM2/LENS2-seeded history-field catalogue, and size
+its variables on a grid.
 
-The CMIP7 tool no longer prices anything from it. It survives only as the
-`cesm2` provenance source for tools/import_cmip7.py: "this name exists in the
-old catalogue, so a spreadsheet mapping to it is a CESM2 carry-over". The web
-bundle is built by build.py.
+Two jobs: the `cesm2` provenance source for tools/import_cmip7.py ("this name
+exists in the old catalogue, so a spreadsheet mapping to it is a CESM2
+carry-over"), and the per-variable dimensions build.py prices CMIP7 requests
+from. The web bundle itself is built by build.py.
 """
 
 from pathlib import Path
@@ -35,6 +36,21 @@ class DataError(Exception):
 
 def load(name):
     return yaml.safe_load((DATA / name).read_text())
+
+
+def replace_subsequence(seq, old, new):
+    """Replace the first contiguous run of `old` in `seq` with `new`.
+
+    This is how [time, lev, lat, lon] becomes [time, lev, ncol] on a spectral
+    element grid. Variables that don't carry the component's horizontal dims --
+    CTSM's [time, pft], or the zonal-mean [time, ilev, lat, zlon] -- contain no
+    match and pass through untouched, which is exactly what we want.
+    """
+    n = len(old)
+    for i in range(len(seq) - n + 1):
+        if seq[i:i + n] == old:
+            return seq[:i] + list(new) + seq[i + n:]
+    return list(seq)
 
 
 def load_catalogue():
@@ -89,3 +105,39 @@ def load_catalogue():
             })
         catalogue[component] = (horiz_dims, variables)
     return catalogue, streams
+
+
+def resolve_sizes(grid, vertical):
+    """Flatten one grid x vertical config into {component: (horiz, sizes)}."""
+    out = {}
+    for component in COMPONENTS:
+        spec = grid[component]
+        # Vertical sizes (lev/ilev) are merged into every component; a grid's
+        # own sizes win. Only CAM fields use them in practice.
+        sizes = {**vertical["sizes"], **spec["sizes"]}
+        out[component] = (spec.get("horiz"), sizes)
+    return out
+
+
+def bytes_per_sample(var, horiz_dims, horiz, sizes, where):
+    """Bytes for one time sample, or None if the variable can't exist here.
+
+    A dimension present but set to null means "does not exist on this grid" ->
+    the variable is excluded. A dimension missing entirely is a data error.
+    """
+    dims = replace_subsequence(var["dims"], horiz_dims, horiz) if horiz else var["dims"]
+    total = var["dtype_bytes"]
+    for dim in dims:
+        if dim == "time":
+            continue
+        if dim not in sizes:
+            raise DataError(
+                f"{where}: {var['name']} needs dimension {dim!r} but it has no "
+                f"size there.\n  variable dims: {var['dims']}\n"
+                f"  Add {dim!r} to that component's `sizes` in data/grids.yaml "
+                f"(or set it to null if it does not exist on that grid).")
+        size = sizes[dim]
+        if size is None:
+            return None
+        total *= size
+    return total

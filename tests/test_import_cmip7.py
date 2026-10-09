@@ -219,8 +219,8 @@ def write_log_yaml(tmp_path, monkeypatch):
 
 
 def row(name, raw, realm="atmos", freq="mon", groups="grp_high",
-        experiments="historical,piControl", uid="u"):
-    return {"CMIP7 Compound Name": name, "CESM Variable Name": raw,
+        experiments="historical,piControl", uid="u", branding="tavg"):
+    return {"CMIP7 Compound Name": f"{realm}.{name}.{branding}-u-hxy-u.{freq}.glb", "CESM Variable Name": raw,
             "Modelling Realm - Primary": realm, "CMIP7 Frequency": freq,
             "CMIP7 Variable Groups": groups, "List of Experiments": experiments,
             "UID": uid}
@@ -231,36 +231,38 @@ def test_build_requests_end_to_end(tmp_path, monkeypatch):
     write_priority_csvs(tmp_path, monkeypatch)
     write_log_yaml(tmp_path, monkeypatch)
     monkeypatch.setattr(import_cmip7, "CESM3_CSV", write_cesm3_csv(tmp_path, [
-        row("a.trefht", "TREFHT", experiments="historical, piControl, historical"),
-        row("a.partial", "TREFHT, GHOST_VAR", groups="grp_low", experiments="amip"),
-        row("o.sst", "SST", realm="ocean", groups="", experiments="historical"),
-        row("l.none", "N/A", realm="land"),
-        row("a.fixed", "TREFHT", freq="fx"),
+        row("trefht", "TREFHT", branding="tpt", experiments="historical, piControl, historical"),
+        row("partial", "TREFHT, GHOST_VAR", groups="grp_low", experiments="amip"),
+        row("sst", "SST", realm="ocean", groups="", experiments="historical"),
+        row("none", "N/A", realm="land"),
+        row("fixed", "TREFHT", freq="fx"),
     ]))
 
     requests, experiments = import_cmip7.build_requests()
-    by_name = {r["name"]: r for r in requests}
+    by_name = {r["name"].split(".")[1]: r for r in requests}
 
-    trefht = by_name["a.trefht"]
+    trefht = by_name["trefht"]
     assert trefht["stream"] == "month_1" and trefht["priority"] == 2
     assert trefht["raw_cesm_name"] == "TREFHT" and trefht["groups"] == ["grp_high"]
-    assert trefht["source_line"] == 2 and by_name["a.partial"]["source_line"] == 3
+    assert trefht["source_line"] == 2 and by_name["partial"]["source_line"] == 3
     assert [(t["name"], t["status"]) for t in trefht["tokens"]] == [("TREFHT", "verified")]
 
-    partial = by_name["a.partial"]
+    partial = by_name["partial"]
     assert [(t["name"], t["status"], t["component_source"]) for t in partial["tokens"]] == [
         ("TREFHT", "verified", "log"), ("GHOST_VAR", "spreadsheet-only", "realm-fallback")]
     assert partial["priority"] == 4
 
-    sst = by_name["o.sst"]
+    sst = by_name["sst"]
     assert sst["tokens"][0]["status"] == "cesm2" and sst["priority"] is None
 
-    none = by_name["l.none"]
+    none = by_name["none"]
     assert none["tokens"] == [] and none["fallback_component"] == "lnd"
 
-    assert by_name["a.fixed"]["stream"] is None      # fx isn't modeled
+    assert by_name["fixed"]["stream"] is None      # fx isn't modeled
 
     # experiment -> request indices, de-duplicated per request
+    assert trefht["time_method"] == "tpt"
+    assert [(t["method"], t["method_source"]) for t in trefht["tokens"]] == [("I", "compound-name")]
     assert experiments["historical"] == [0, 2, 3, 4]
     assert experiments["piControl"] == [0, 3, 4]
     assert experiments["amip"] == [1]
@@ -300,3 +302,24 @@ def test_committed_bundle_is_not_stale():
     assert current == import_cmip7.OUTPUT.read_text(), (
         "data/cmip7_request.yaml is out of date -- run `make import-cmip7` "
         "and commit the result.")
+
+
+# --- time method: CMIP7 branding -> CESM averaging flag -----------------------
+
+@pytest.mark.parametrize("branding,flag", [
+    ("tavg", "A"), ("tpt", "I"), ("tmax", "X"), ("tmin", "M"), ("tsum", "SUM"),
+    ("ti", None), ("tclm", "A"), ("tmaxavg", "X"), ("tminavg", "M")])
+def test_time_method_flags(branding, flag):
+    name = f"atmos.tas.{branding}-h2m-hxy-u.day.glb"
+    assert import_cmip7.time_method(name)[1] == flag
+
+
+def test_every_derived_method_carries_its_caveat():
+    for prefix in ("tclm", "tclmdc", "tmaxavg", "tminavg", "ti"):
+        assert import_cmip7.TIME_METHODS[prefix][1]
+    for prefix in ("tavg", "tpt", "tmax", "tmin", "tsum"):
+        assert import_cmip7.TIME_METHODS[prefix][1] is None
+
+
+def test_explicit_cesm_name_suffix_overrides_the_derived_method():
+    assert import_cmip7.split_tokens("O3:i, T") == [("O3", "I"), ("T", None)]

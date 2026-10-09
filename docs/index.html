@@ -48,6 +48,15 @@
   tr.detail > td { background: #fafbfc; padding: 6px 10px 10px 34px; font-size: 12px; }
   .src { margin: 4px 0 8px; padding-left: 8px; border-left: 3px solid var(--line); }
   .src code { background: #eef0f3; padding: 0 3px; border-radius: 3px; }
+  td.sz { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  td.sz.none { color: var(--muted); }
+  #total { position: fixed; top: 8px; right: 12px; z-index: 5; background: #fff; text-align: right;
+           border: 1px solid var(--line); border-radius: 6px; padding: 4px 12px;
+           box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+  #total b { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #total span { display: block; font-size: 11px; color: var(--muted); }
+  .approx { color: var(--warn); }
+  .note { font-size: 12px; color: var(--muted); margin-top: 6px; }
   .hint { color: var(--muted); padding: 24px 4px; }
 </style>
 </head>
@@ -63,6 +72,7 @@
       <option value="3">Core + High + Medium</option>
       <option value="4">Core + High + Medium + Low</option>
       <option value="all" selected>everything requested (incl. unranked)</option></select></label>
+    <label>Grid &amp; levels <select id="cfg"></select></label>
   </div>
 
   <div class="step"><b>2</b> Filter by how each mapping was derived
@@ -84,7 +94,8 @@
     </div>
   </div>
 
-  <div class="step"><b>3</b> Frequencies requested
+  <div class="step"><b>3</b> Realms and frequencies requested
+    <div class="row" id="realms"><span class="lbl">realm</span></div>
     <div class="row" id="freqs"><span class="lbl">frequency</span></div>
   </div>
 
@@ -99,16 +110,29 @@
     <span><span class="pill mm">&ne;realm</span> log put it in a different component than its realm implies</span>
     <span>Click a row to audit it.</span>
   </div>
+  <div class="note">Sizes are GB (10<sup>9</sup> bytes) per simulated year, raw uncompressed, one line per
+    variable and frequency. They come from the old CESM2-era catalogue&rsquo;s dimensions on the chosen grid, so
+    <span class="approx">&asymp;</span> marks sizes that depend on the surface dataset and &#8634; lines carry CESM2 dimensions.
+    Lines with no catalogue entry or an unmodeled frequency (fx, subhr) are unpriced (&ndash;) and left out of the total,
+    which is therefore a lower bound.</div>
 </header>
+
+<div id="total"><b id="tot">&ndash;</b> GB/yr<span id="totnote"></span></div>
 
 <main id="main"><div class="hint">Loading&hellip;</div></main>
 
 <script>
 let B;
-const state = { exp: "", tier: "all", st: new Set(), cs: new Set(), noFreq: new Set() };
+const state = { exp: "", tier: "all", st: new Set(), cs: new Set(), noFreq: new Set(), noRealm: new Set(), cfg: 0 };
 const GLYPH = { "verified": "&#10003;", "spreadsheet-only": "&#9680;", "cesm2": "&#8634;", "missing": "&#9888;" };
 const LABEL = { "verified": "verified", "spreadsheet-only": "spreadsheet only",
                 "cesm2": "old CESM2 mapping", "missing": "missing mapping" };
+// CESM history averaging flags (the `:X` in a CAM/CTSM fincl entry).
+const METHOD = { A: "mean", I: "instantaneous", X: "maximum", M: "minimum", SUM: "sum" };
+const colon = (c) => B.colon_components.includes(c);
+const cesmName = (c, row) => row.method && colon(c) ? `${row.name}:${row.method}` : row.name;
+const byLine = (a, b) => a.name.localeCompare(b.name) ||
+  (a.method || "").localeCompare(b.method || "") || a.freq.localeCompare(b.freq);
 const PRIORITY = { 1: "Core", 2: "High", 3: "Medium", 4: "Low" };
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, c =>
@@ -133,6 +157,20 @@ function explain(t, r) {
   return `${status}.<br>${comp}.` + (t.mm ? ` <span class="pill mm">&ne;realm</span> realm ${esc(r.realm)} would have implied a different component.` : "");
 }
 
+// --- volume -----------------------------------------------------------------
+
+const fmtGB = (gb) => gb < 0.005 ? "<0.01" : gb >= 100 ? Math.round(gb).toLocaleString() : gb.toFixed(2);
+
+// {gb, approx} for one (component, variable, frequency) line, or {why} if it cannot be priced.
+function price(c, name, freq) {
+  const s = B.sizes[c + "|" + name], per = B.per_year[freq];
+  if (!s) return { why: "no entry for this variable in the catalogue, so no dimensions to size it from" };
+  if (per === undefined) return { why: `frequency ${freq} has no per-year volume (one-off or timestep-dependent)` };
+  const b = s.b[state.cfg];
+  if (b === null) return { why: "does not exist on the chosen grid" };
+  return { gb: b * per / 1e9, approx: !!s.a, bytes: b, per, s };
+}
+
 // --- selection --------------------------------------------------------------
 
 function selected() {
@@ -150,7 +188,7 @@ function compute() {
                    "log": 0, "catalogue": 0, "realm-fallback": 0 };
   const reqs = selected();
   for (const r of reqs) {
-    if (state.noFreq.has(r.f)) continue;
+    if (state.noFreq.has(r.f) || state.noRealm.has(r.realm)) continue;
     if (!r.t.length) {
       counts.missing++;
       if (state.st.has("missing")) missing[r.fc].push(r);
@@ -159,8 +197,8 @@ function compute() {
     for (const t of r.t) {
       counts[t.st]++; counts[t.cs]++;
       if (!state.st.has(t.st) || !state.cs.has(t.cs)) continue;
-      const key = t.n + "|" + r.f, m = comps[t.c];
-      if (!m.has(key)) m.set(key, { name: t.n, freq: r.f, items: [] });
+      const key = t.n + "|" + (t.m || "") + "|" + r.f, m = comps[t.c];
+      if (!m.has(key)) m.set(key, { key, name: t.n, method: t.m, freq: r.f, items: [] });
       m.get(key).items.push({ r, t });
     }
   }
@@ -172,17 +210,25 @@ function compute() {
 let current;   // last compute() result, for downloads and row expansion
 
 function render() {
-  if (!state.exp) { $("main").innerHTML = '<div class="hint">Choose an experiment to list the CESM3 variables its CMIP7 request needs.</div>'; return; }
+  if (!state.exp) { $("tot").textContent = "\u2013"; $("totnote").textContent = ""; $("main").innerHTML = '<div class="hint">Choose an experiment to list the CESM3 variables its CMIP7 request needs.</div>'; return; }
   current = compute();
   for (const k of Object.keys(current.counts)) { const e = $("n-" + k); if (e) e.textContent = `(${current.counts[k]})`; }
+  let total = 0, unpriced = 0, lines = 0;
+  const sub = {};
+  for (const c of B.components) for (const row of current.comps[c].values()) {
+    const p = price(c, row.name, row.freq);
+    row.p = p; lines++;
+    if (p.gb === undefined) unpriced++; else { total += p.gb; sub[c] = (sub[c] || 0) + p.gb; }
+  }
+  $("tot").textContent = fmtGB(total);
+  $("totnote").textContent = `${lines - unpriced} of ${lines} lines priced`;
   const parts = [`<div id="summary">${current.nreq} CMIP7 requests for <b>${esc(state.exp)}</b>.</div>`];
   for (const c of B.components) {
-    const rows = [...current.comps[c].values()].sort((a, b) =>
-      a.name.localeCompare(b.name) || a.freq.localeCompare(b.freq));
+    const rows = [...current.comps[c].values()].sort(byLine);
     const miss = current.missing[c];
     if (!rows.length && !miss.length) continue;
     parts.push(`<details class="comp" data-c="${c}" ${rows.length < 400 ? "open" : ""}><summary><span>${c}</span>` +
-      `<span class="sub">${rows.length} variable/frequency lines` + (miss.length ? `, ${miss.length} requests with no mapping` : "") + `</span>` +
+      `<span class="sub">${rows.length} variable/frequency lines` + (sub[c] ? `, ${esc(fmtGB(sub[c]))} GB/yr` : "") + (miss.length ? `, ${miss.length} requests with no mapping` : "") + `</span>` +
       `<button data-dl="txt" data-c="${c}" ${rows.length ? "" : "disabled"}>download .txt</button>` +
       `<button data-dl="csv" data-c="${c}" ${rows.length ? "" : "disabled"}>audit .csv</button></summary>` +
       `<div class="scroll"><table><tbody>`);
@@ -190,24 +236,42 @@ function render() {
       const sts = [...new Set(row.items.map(x => x.t.st))], srcs = [...new Set(row.items.map(x => x.t.cs))];
       const mm = row.items.some(x => x.t.mm);
       const names = [...new Set(row.items.map(x => x.r.n))];
-      parts.push(`<tr class="item" data-c="${c}" data-k="${esc(row.name + "|" + row.freq)}">` +
+      parts.push(`<tr class="item" data-c="${c}" data-k="${esc(row.key)}">` +
         `<td>${sts.map(sym).join("")}${srcs.map(srcPill).join("")}${mm ? '<span class="pill mm">&ne;realm</span>' : ""}</td>` +
-        `<td class="nm">${esc(row.name)}</td><td class="fq">${esc(row.freq)}</td>` +
-        `<td class="cm">${esc(names.slice(0, 2).join("  ·  "))}${names.length > 2 ? `  · +${names.length - 2} more` : ""}</td></tr>`);
+        `<td class="nm">${esc(cesmName(c, row))}${row.method && !colon(c) ? ` <span class="pill" title="time method: ${esc(METHOD[row.method])}">${esc(METHOD[row.method])}</span>` : ""}</td><td class="fq">${esc(row.freq)}</td>` +
+        `<td class="cm">${esc(names.slice(0, 2).join("  ·  "))}${names.length > 2 ? `  · +${names.length - 2} more` : ""}</td>` +
+        (row.p.gb === undefined
+          ? `<td class="sz none" title="${esc(row.p.why)}">&ndash;</td></tr>`
+          : `<td class="sz">${row.p.approx ? '<span class="approx" title="size depends on the surface dataset">&asymp;</span> ' : ""}${esc(fmtGB(row.p.gb))} GB/yr</td></tr>`));
     });
     for (const r of miss) {
       parts.push(`<tr class="item" data-miss="${esc(r.n)}"><td>${sym("missing")}${srcPill("realm-fallback")}</td>` +
-        `<td class="nm" style="color:var(--bad)">(no CESM name)</td><td class="fq">${esc(r.f)}</td><td class="cm">${esc(r.n)}</td></tr>`);
+        `<td class="nm" style="color:var(--bad)">(no CESM name)</td><td class="fq">${esc(r.f)}</td><td class="cm">${esc(r.n)}</td><td class="sz none"></td></tr>`);
     }
     parts.push("</tbody></table></div></details>");
   }
   $("main").innerHTML = parts.join("");
 }
 
+function sizeHtml(c, row) {
+  const p = row.p;
+  if (p.gb === undefined) return `<div class="src"><b>size:</b> unpriced &mdash; ${esc(p.why)}.</div>`;
+  return `<div class="src"><b>size:</b> catalogue dims <code>[${esc(p.s.d.join(", "))}]</code> &times; ${p.s.w} B = ` +
+    `${p.bytes.toLocaleString()} bytes/sample on ${esc(B.configs[state.cfg].key)} &times; ${p.per}/yr = ` +
+    `${esc(fmtGB(p.gb))} GB/yr${p.approx ? " (&asymp; surface-dataset dims)" : ""}.</div>`;
+}
+
+function methodHtml(r, t) {
+  if (!t || !t.m) return r.mn ? `time method: ${esc(r.mn)}<br>` : "";
+  const how = t.ms === "cesm-name" ? "explicit suffix in the spreadsheet&rsquo;s CESM name"
+    : `CMIP7 time method <code>${esc(r.tm)}</code>`;
+  return `time method: <b>${t.m}</b> (${METHOD[t.m]}) from ${how}.` + (r.mn ? ` Note: ${esc(r.mn)}.` : "") + "<br>";
+}
+
 function detailHtml(items) {
   return items.map(({ r, t }) => `<div class="src"><b class="mono">${esc(r.n)}</b> &middot; ${esc(r.f)} &middot; ` +
     `${sym(t ? t.st : "missing")} ${t ? LABEL[t.st] : "missing mapping"}<br>` +
-    (t ? explain(t, r) + "<br>" : `<code>CESM3_current.csv</code> line ${r.l} has no CESM variable name. Filed under <b>${r.fc}</b> by realm <code>${esc(r.realm)}</code> only.<br>`) +
+    (t ? explain(t, r) + "<br>" + methodHtml(r, t) : `<code>CESM3_current.csv</code> line ${r.l} has no CESM variable name. Filed under <b>${r.fc}</b> by realm <code>${esc(r.realm)}</code> only.<br>`) +
     `raw <code>CESM Variable Name</code> cell: <code>${esc(r.raw) || "(empty)"}</code> &middot; UID <code>${esc(r.u)}</code><br>` +
     `priority: ${r.p ? PRIORITY[r.p] : "unranked"} &middot; groups: ${esc(r.g.join(", ")) || "(none)"}</div>`).join("");
 }
@@ -222,7 +286,8 @@ $("main").addEventListener("click", (e) => {
   const items = tr.dataset.miss !== undefined
     ? [{ r: B.requests.find(r => r.n === tr.dataset.miss && !r.t.length), t: null }]
     : current.comps[tr.dataset.c].get(tr.dataset.k).items;
-  tr.insertAdjacentHTML("afterend", `<tr class="detail"><td colspan="4">${detailHtml(items)}</td></tr>`);
+  const size = tr.dataset.miss !== undefined ? "" : sizeHtml(tr.dataset.c, current.comps[tr.dataset.c].get(tr.dataset.k));
+  tr.insertAdjacentHTML("afterend", `<tr class="detail"><td colspan="5">${size}${detailHtml(items)}</td></tr>`);
 });
 
 // --- export -----------------------------------------------------------------
@@ -236,20 +301,24 @@ function save(text, filename, type) {
 const csvCell = (v) => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
 
 function download(kind, c) {
-  const rows = [...current.comps[c].values()].sort((a, b) => a.name.localeCompare(b.name) || a.freq.localeCompare(b.freq));
+  const rows = [...current.comps[c].values()].sort(byLine);
   const base = `cesm3_${state.exp}_${c}`;
   if (kind === "txt") {
     const head = [`# CESM3 ${c} history variables needed for the CMIP7 request: experiment ${state.exp}`,
       `# priority: ${$("tier").selectedOptions[0].text}; statuses: ${[...state.st].filter(s => s !== "missing").join(", ")}`,
-      `# one "VARIABLE FREQUENCY" per line; frequency is the CMIP7 label (mon, day, 6hr, fx, ...)`];
-    save(head.concat(rows.map(r => `${r.name} ${r.freq}`)).join("\n") + "\n", base + "_vars.txt", "text/plain");
+      `# one "VARIABLE FREQUENCY" per line; frequency is the CMIP7 label (mon, day, 6hr, fx, ...)`,
+      colon(c) ? `# VARIABLE:FLAG is the CESM history averaging flag: A mean, I instantaneous, X maximum, M minimum, SUM sum`
+               : `# ${c} does not take :FLAG suffixes; the time method follows each line as a comment`];
+    save(head.concat(rows.map(r => `${cesmName(c, r)} ${r.freq}` +
+      (r.method && !colon(c) ? `  # ${METHOD[r.method]}` : ""))).join("\n") + "\n", base + "_vars.txt", "text/plain");
   } else {
-    const cols = ["variable", "frequency", "status", "component_source", "realm_mismatch", "compound_name",
-                  "uid", "csv_line", "raw_cesm_variable_name", "priority", "groups", "log_components", "catalogue_state"];
+    const cols = ["variable", "base_variable", "time_method", "method_source", "method_note", "frequency", "status", "component_source", "realm_mismatch", "compound_name",
+                  "uid", "csv_line", "raw_cesm_variable_name", "priority", "groups", "log_components", "catalogue_state", "gb_per_year"];
     const lines = [cols.join(",")];
     for (const row of rows) for (const { r, t } of row.items)
-      lines.push([row.name, row.freq, t.st, t.cs, t.mm, r.n, r.u, r.l, r.raw, r.p ? PRIORITY[r.p] : "",
-                  r.g.join(";"), t.log.join(";"), t.cat || ""].map(csvCell).join(","));
+      lines.push([cesmName(c, row), row.name, row.method || "", t.ms || "", r.mn || "", row.freq, t.st, t.cs, t.mm, r.n, r.u, r.l, r.raw, r.p ? PRIORITY[r.p] : "",
+                  r.g.join(";"), t.log.join(";"), t.cat || "",
+                  row.p.gb === undefined ? "" : row.p.gb].map(csvCell).join(","));
     save(lines.join("\n") + "\n", base + "_audit.csv", "text/csv");
   }
 }
@@ -261,9 +330,18 @@ function setup() {
     `<option value="${esc(e)}">${esc(e)} (${B.experiments[e].length})</option>`).join(""));
   state.st = new Set(["verified", "spreadsheet-only", "cesm2", "missing"]);
   state.cs = new Set(B.component_sources);
+  // CMIP7 "primary realm" of each request; chemistry and aerosol first, as they are the usual cut.
+  const order = ["aerosol", "atmosChem"];
+  const realms = [...new Set(B.requests.map(r => r.realm))].sort((a, b) =>
+    (order.indexOf(b) + 1) - (order.indexOf(a) + 1) || a.localeCompare(b));
+  const label = { atmosChem: "atmosChem (chemistry)" };
+  $("realms").insertAdjacentHTML("beforeend", realms.map(x =>
+    `<label><input type="checkbox" data-k="realm" value="${esc(x)}" checked> ${esc(label[x] || x)}</label>`).join(""));
   const freqs = [...new Set(B.requests.map(r => r.f))].sort();
   $("freqs").insertAdjacentHTML("beforeend", freqs.map(f =>
     `<label><input type="checkbox" data-k="f" value="${esc(f)}" checked> ${esc(f)}</label>`).join(""));
+  $("cfg").innerHTML = B.configs.map(c => `<option>${esc(c.label)}</option>`).join("");
+  $("cfg").selectedIndex = state.cfg = B.default_config;
   const q = new URLSearchParams(location.search).get("exp");
   if (q && B.experiments[q]) { $("exp").value = q; state.exp = q; }
   render();
@@ -273,7 +351,9 @@ document.body.addEventListener("change", (e) => {
   const t = e.target;
   if (t.id === "exp") state.exp = t.value;
   else if (t.id === "tier") state.tier = t.value;
+  else if (t.id === "cfg") state.cfg = t.selectedIndex;
   else if (t.dataset.k === "st" || t.dataset.k === "cs") state[t.dataset.k][t.checked ? "add" : "delete"](t.value);
+  else if (t.dataset.k === "realm") state.noRealm[t.checked ? "delete" : "add"](t.value);
   else if (t.dataset.k === "f") state.noFreq[t.checked ? "delete" : "add"](t.value);
   else return;
   render();

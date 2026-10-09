@@ -166,6 +166,23 @@ def test_glc_has_no_cesm3_overrides_yet():
 
 def test_data_files_parse_as_yaml():
     """A syntax error in any data file should fail here with the filename."""
-    for name in ("streams.yaml",
+    for name in ("streams.yaml", "grids.yaml", "vertical.yaml",
                  *(f"{c}.yaml" for c in estimator.COMPONENTS)):
         assert yaml.safe_load((estimator.DATA / name).read_text())
+
+
+# --- sizing helpers (restored for build.py) ---------------------------------
+
+@pytest.mark.parametrize("dims,expected", [
+    (["time", "lev", "lat", "lon"], ["time", "lev", "ncol"]),
+    (["time", "pft"], ["time", "pft"]),                    # no match, untouched
+])
+def test_replace_subsequence(dims, expected):
+    assert estimator.replace_subsequence(dims, ["lat", "lon"], ["ncol"]) == expected
+
+
+def test_null_size_excludes_but_missing_size_raises():
+    var = {"name": "X", "dims": ["time", "boom"], "dtype_bytes": 4}
+    assert estimator.bytes_per_sample(var, ["lat", "lon"], None, {"boom": None}, "here") is None
+    with pytest.raises(DataError, match="boom"):
+        estimator.bytes_per_sample(var, ["lat", "lon"], None, {}, "here")

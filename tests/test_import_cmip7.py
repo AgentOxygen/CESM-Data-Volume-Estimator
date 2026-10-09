@@ -227,6 +227,8 @@ def row(name, raw, realm="atmos", freq="mon", groups="grp_high",
 
 
 def test_build_requests_end_to_end(tmp_path, monkeypatch):
+    monkeypatch.setattr(import_cmip7, "SCRAPER", tmp_path / "no-scraper")      # statuses from log + catalogue only
+    monkeypatch.setattr(import_cmip7, "ALIASES_YAML", tmp_path / "no-aliases.yaml")
     write_mini_catalogue(tmp_path, monkeypatch)
     write_priority_csvs(tmp_path, monkeypatch)
     write_log_yaml(tmp_path, monkeypatch)
@@ -298,7 +300,7 @@ def test_committed_bundle_is_not_stale():
     exactly how data/cmip7_request.yaml went stale once already: applying
     tools/apply_verified_tags.py changed data/*.yaml without re-running
     `make import-cmip7`."""
-    current = import_cmip7.render(*import_cmip7.build_requests())
+    current = import_cmip7.render(*import_cmip7.build_requests(), import_cmip7.source_configuration())
     assert current == import_cmip7.OUTPUT.read_text(), (
         "data/cmip7_request.yaml is out of date -- run `make import-cmip7` "
         "and commit the result.")
@@ -323,3 +325,64 @@ def test_every_derived_method_carries_its_caveat():
 
 def test_explicit_cesm_name_suffix_overrides_the_derived_method():
     assert import_cmip7.split_tokens("O3:i, T") == [("O3", "I"), ("T", None)]
+
+
+# --- source evidence + aliases -------------------------------------------------
+
+def write_scraper(tmp_path):
+    """A tiny cesm-field-scraper tree: one configuration, atm + ice records of every kind."""
+    root = tmp_path / "scraper"
+    (root / "out").mkdir(parents=True)
+    (root / "configurations.yaml").write_text(yaml.safe_dump({"CFG": {"scam": False, "cism": False}}))
+    def rec(name, **kw):
+        return {"name": name, "source": f"src/x.F90:{kw.pop('line', 1)}", **kw}
+    (root / "out" / "atm.yaml").write_text(yaml.safe_dump({"fields": [
+        rec("LITERAL_SRC"), rec("LOOP_SRC", alternatives=154), rec("LOOP_SRC", line=9),
+        rec("SCAM_ONLY", requires={"scam": [True]}), rec(None, name_patterns=["AOD*"]),
+        rec("IN_BOTH")]}))
+    (root / "out" / "ice.yaml").write_text(yaml.safe_dump({"fields": [rec("siage")]}))
+    return root
+
+
+def source_setup(tmp_path, monkeypatch):
+    monkeypatch.setattr(import_cmip7, "SCRAPER", write_scraper(tmp_path))
+    monkeypatch.setattr(import_cmip7, "SOURCE_CONFIG", "CFG")
+    return import_cmip7.load_source_index()
+
+
+def test_source_index_applies_configuration_and_prefers_literal(tmp_path, monkeypatch):
+    idx = source_setup(tmp_path, monkeypatch)["atm"]
+    assert "SCAM_ONLY" not in idx["exact"]                              # needs scam; the configuration has it off
+    assert idx["exact"]["LOOP_SRC"] == ("literal", "src/x.F90:9")        # the literal record beats the expanded one
+    assert idx["patterns"] == [("AOD*", "src/x.F90:1")]
+
+
+def test_source_index_is_none_without_scraper_output(tmp_path, monkeypatch):
+    monkeypatch.setattr(import_cmip7, "SCRAPER", tmp_path / "nothing")
+    assert import_cmip7.load_source_index() is None and import_cmip7.source_configuration() is None
+
+
+def test_status_source_between_verified_and_cesm2(tmp_path, monkeypatch):
+    idx = source_setup(tmp_path, monkeypatch)
+    cat = import_cmip7.index_catalogue({"atm": ([], [{"name": "OLD_ONLY", "verified": "cesm2-only"}])})
+    log = {"atm": {"IN_BOTH"}}
+    r = lambda n: import_cmip7.resolve_mapping(n, "atmos", log, cat, idx)
+    assert r("IN_BOTH")["status"] == "verified" and r("IN_BOTH")["component_source"] == "log"
+    lit, loop, pat = r("LITERAL_SRC"), r("LOOP_SRC"), r("AODDUST01")
+    assert (lit["status"], lit["component_source"], lit["source_certainty"], lit["source_ref"]) == ("source", "source", "literal", "src/x.F90:1")
+    assert loop["source_certainty"] == "literal"                          # via the literal record
+    assert (pat["status"], pat["source_certainty"]) == ("source", "pattern")
+    assert r("OLD_ONLY")["status"] == "cesm2" and r("NOWHERE")["status"] == "spreadsheet-only"
+
+
+def test_daily_suffix_and_reviewed_aliases(tmp_path, monkeypatch):
+    idx = source_setup(tmp_path, monkeypatch)
+    cat = import_cmip7.index_catalogue({"atm": ([], []), "ice": ([], [])})
+    m = import_cmip7.resolve_mapping("siage_d", "seaIce", {}, cat, idx)
+    assert (m["status"], m["alias_of"], m["component"]) == ("source", "siage", "ice")
+    m = import_cmip7.resolve_mapping("renamed", "seaIce", {}, cat, idx, aliases={"renamed": "siage"})
+    assert (m["status"], m["alias_of"]) == ("source", "siage")
+    # a name with its own evidence is never aliased
+    assert import_cmip7.resolve_mapping("siage", "seaIce", {}, cat, idx)["alias_of"] is None
+    # nothing found anywhere stays spreadsheet-only
+    assert import_cmip7.resolve_mapping("nope_d", "seaIce", {}, cat, idx)["status"] == "spreadsheet-only"

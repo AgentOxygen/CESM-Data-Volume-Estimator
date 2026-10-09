@@ -1,0 +1,47 @@
+# Named configurations: the value of every axis in cesm_fields/config.py RULES.
+# A record is registered in a configuration when each axis it `requires` has an allowed value here
+# (cesm_fields.config.active). Axes not named here are off / unset.
+#
+# Values come from the compset's long name (cime_config/config_compsets.xml) and the component
+# config_component.xml defaults at the pinned tag; `from:` says where.
+
+BHISTE_MTt4s:
+  compset: HISTE_CAM70%MT%CT4S2_CLM60%BGC-CROP_CICE_MOM6_MOSART_DGLC%NOEVOLVE_WW3
+  dycore: se                              # CAM default for ne30pg3
+  physics: cam7                           # CAM70
+  chem: trop_strat_mam5_t4s2              # cam/cime_config/config_component.xml: %CT4S2 -> -chem trop_strat_mam5_t4s2 -waccm_phys
+  waccm_phys: true                        # same line
+  macrop: clubb_sgs                       # cam7: pbl=clubb_sgs sets macrop/shallow/eddy_scheme (namelist_defaults_cam.xml)
+  shallow: clubb_sgs
+  eddy: clubb_sgs
+  cosp: false                             # no COSP lines in atm.log
+  aerosol: modal_aero                     # bld/configure: -chem *_mam* -> src/chemistry/modal_aero
+  radiation: rrtmgp                       # atm.log: "RRTMGP radiation scheme parameters"
+  cism: false                             # DGLC%NOEVOLVE: data ice sheet, CISM does not run
+  use_fates: false                        # CLM60%BGC-CROP
+  scam: false
+  debug: false
+  marbl: true                             # a log shows MARBL running; compset has no MOM6%..MARBL, so confirm (plan, open question)
+  # Not stated by the compset: waccmx, carma, cosp, ali_arms. Left off; the log-recall check (plan step 7) catches mistakes.
+  optional_physics: []                    # nudging, silhs: namelist/configure options, off by default
+  # configure attributes for namelist_defaults_cam.xml (bld/configure: cam7 -> mg3 microphysics, clubb_sgs macrophysics and pbl, rrtmgp)
+  ccpp_suite: cam7                        # src/atmos_phys/suites/suite_cam7.xml names the CCPP schemes that run
+  cam_config:
+    phys: cam7
+    dyn: se
+    chem: trop_strat_mam5_t4s2
+    rad: rrtmgp
+    microphys: mg3
+    macrophys: clubb_sgs
+    pbl: clubb_sgs
+    clubb_sgs: "1"
+    waccm_phys: "1"
+    waccmx: "0"
+    silhs: "0"
+    carma: none
+    scam: "0"
+    camiop: "0"
+    npg: "3"
+    hgrid: ne30pg3
+    nlev: "93"
+    model_top: mt

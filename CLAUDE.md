@@ -19,9 +19,9 @@
 A static web page that turns the CMIP7 data request into per-component lists
 of CESM3 history variables: pick an experiment, see which variables and
 frequencies each component needs, download one text file per component. Goal
-and workflow: `GOAL.md`. Every mapping carries a status (verified / spreadsheet
-only / old CESM2 / missing) and a component source (log / catalogue / realm
-guess) so it can be audited from the page. Full detail in `README.md`.
+and workflow: `GOAL.md`. Every mapping carries a status (verified = in a run log / source = registered by
+the CESM3 source for the baseline configuration / spreadsheet only / old CESM2 /
+missing) and a component source (log / source / catalogue / realm guess) so it can be audited from the page. Full detail in `README.md`.
 
 ```
 make test           # pytest, in Docker
@@ -31,6 +31,9 @@ make dev            # http://localhost:8000, rebuilds + live-reloads on save
 make shell          # shell in the dev container
 ```
 
+- `cesm-field-scraper/out/` (the CESM3 source catalogue, one YAML per component) is local-only
+  and not committed until approved; `tools/import_cmip7.py` reads it like `reference/` and, when
+  absent, falls back to log + old-catalogue statuses. `data/aliases.yaml` holds reviewed renames.
 - `reference/` is local-only and not committed. Code that reads it must skip
   gracefully when it is absent.
 - `data/cmip7_request.yaml` and `docs/data.json` are generated and committed;

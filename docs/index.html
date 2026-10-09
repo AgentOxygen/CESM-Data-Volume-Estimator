@@ -27,7 +27,7 @@
   #exp { min-width: 16em; }
   .legend { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 18px; }
   .sym { display: inline-block; min-width: 1.2em; text-align: center; font-weight: 700; }
-  .s-verified { color: var(--ok); } .s-spreadsheet-only { color: var(--warn); }
+  .s-verified { color: var(--ok); } .s-source { color: var(--ok); opacity: .75; } .s-spreadsheet-only { color: var(--warn); }
   .s-cesm2 { color: var(--legacy); } .s-missing { color: var(--bad); }
   .pill { font: 10px ui-monospace, Menlo, monospace; padding: 1px 6px; border-radius: 8px;
           border: 1px solid var(--line); color: var(--muted); margin-left: 3px; }
@@ -80,6 +80,8 @@
     <div class="row"><span class="lbl">mapping</span>
       <label><input type="checkbox" data-k="st" value="verified" checked>
         <span class="sym s-verified">&#10003;</span> verified (spreadsheet + CESM3 log) <i id="n-verified"></i></label>
+      <label><input type="checkbox" data-k="st" value="source" checked>
+        <span class="sym s-source">&#9679;</span> registered in CESM3 source (not in the log) <i id="n-source"></i></label>
       <label><input type="checkbox" data-k="st" value="spreadsheet-only">
         <span class="sym s-spreadsheet-only">&#9680;</span> spreadsheet only (not in log) <i id="n-spreadsheet-only"></i></label>
       <label><input type="checkbox" data-k="st" value="cesm2">
@@ -105,6 +107,7 @@
 
   <div class="legend">
     <span><span class="sym s-verified">&#10003;</span> in spreadsheet and registered by a CESM3 run</span>
+    <span><span class="sym s-source">&#9679;</span> registered by the CESM3 source for the baseline configuration, not seen in the run log</span>
     <span><span class="sym s-spreadsheet-only">&#9680;</span> in spreadsheet, not seen in any log</span>
     <span><span class="sym s-cesm2">&#8634;</span> found only in the CESM2-era catalogue</span>
     <span><span class="sym s-missing">&#9888;</span> spreadsheet gives no CESM name</span>
@@ -127,8 +130,8 @@
 <script>
 let B;
 const state = { exp: "", tier: "all", st: new Set(), cs: new Set(), noFreq: new Set(), noRealm: new Set(), cfg: 0 };
-const GLYPH = { "verified": "&#10003;", "spreadsheet-only": "&#9680;", "cesm2": "&#8634;", "missing": "&#9888;" };
-const LABEL = { "verified": "verified", "spreadsheet-only": "spreadsheet only",
+const GLYPH = { "verified": "&#10003;", "source": "&#9679;", "spreadsheet-only": "&#9680;", "cesm2": "&#8634;", "missing": "&#9888;" };
+const LABEL = { "verified": "verified", "source": "in CESM3 source", "spreadsheet-only": "spreadsheet only",
                 "cesm2": "old CESM2 mapping", "missing": "missing mapping" };
 // CESM history averaging flags (the `:X` in a CAM/CTSM fincl entry).
 const METHOD = { A: "mean", I: "instantaneous", X: "maximum", M: "minimum", SUM: "sum" };
@@ -149,11 +152,16 @@ function explain(t, r) {
   const logs = t.log.length ? t.log.join(", ") : "";
   const status = {
     "verified": `named in ${where}, and registered by the CESM3 run log of: ${esc(logs)}`,
+    "source": `named in ${where}; not in the run log, but the CESM3 source registers it for ${esc(B.source_configuration)} ` +
+      ({ literal: "by a literal name", expanded: "as one of many names a loop expands to (the run decides which exist)",
+         pattern: "only as a runtime-built name matching a pattern" }[t.sc] || "") + ` at <code>${esc(t.ref)}</code>` +
+      (t.al ? `; matched through the name <code>${esc(t.al)}</code>` : ""),
     "spreadsheet-only": `named in ${where}; no CESM3 log registers it and the old catalogue lacks it`,
     "cesm2": `named in ${where}; no CESM3 log has it, but the old CESM2-era catalogue does (state: ${esc(t.cat)})`,
   }[t.st];
   const comp = {
     "log": `component <b>${t.c}</b> from the log` + (t.log.length > 1 ? ` (registered by ${esc(logs)}; first realm-preferred taken)` : ""),
+    "source": `component <b>${t.c}</b> from the CESM3 source`,
     "catalogue": `component <b>${t.c}</b> from the old catalogue (realm ${esc(r.realm)})`,
     "realm-fallback": `component <b>${t.c}</b> guessed from CMIP7 realm <code>${esc(r.realm)}</code> &mdash; no log or catalogue entry`,
   }[t.cs];
@@ -187,7 +195,7 @@ function selected() {
 function compute() {
   const comps = {}, missing = {};
   for (const c of B.components) { comps[c] = new Map(); missing[c] = []; }
-  const counts = { "verified": 0, "spreadsheet-only": 0, "cesm2": 0, "missing": 0,
+  const counts = { "verified": 0, "source": 0, "spreadsheet-only": 0, "cesm2": 0, "missing": 0,
                    "log": 0, "catalogue": 0, "realm-fallback": 0 };
   const reqs = selected();
   for (const r of reqs) {
@@ -306,7 +314,8 @@ function save(text, filename, type) {
 const csvCell = (v) => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
 
 const nlMeta = (rows) => ({ iceFields: B.cice_fields, momFields: B.mom_fields, title: `experiment ${state.exp}; ${$("tier").selectedOptions[0].text}`,
-  unverified: rows.filter(r => r.items.some(x => x.t.st !== "verified")).length });
+  unverified: rows.filter(r => r.items.some(x => !["verified", "source"].includes(x.t.st))).length,
+  sourceOnly: rows.filter(r => r.items.some(x => x.t.st === "source")).length, sourceConfiguration: B.source_configuration });
 
 // One zip of every component's namelist(s) for the current selection.
 $("zip").addEventListener("click", () => {
@@ -353,7 +362,7 @@ function download(kind, c) {
 function setup() {
   $("exp").insertAdjacentHTML("beforeend", Object.keys(B.experiments).map(e =>
     `<option value="${esc(e)}">${esc(e)} (${B.experiments[e].length})</option>`).join(""));
-  state.st = new Set(["verified"]);   // unverified names abort a run, so export defaults to verified only
+  state.st = new Set(["verified", "source"]);   // both are registered by a real CESM3 build; the others may abort a run
   state.cs = new Set(B.component_sources);
   // CMIP7 "primary realm" of each request; chemistry and aerosol first, as they are the usual cut.
   const order = ["aerosol", "atmosChem"];

@@ -26,8 +26,8 @@ SOURCE = ROOT / "data" / "cmip7_request.yaml"
 BUNDLE = ROOT / "docs" / "data.json"
 
 COMPONENTS = ["atm", "lnd", "ocn", "ice", "rof", "glc"]
-STATUSES = ["verified", "spreadsheet-only", "cesm2"]       # + "missing" (no tokens)
-COMPONENT_SOURCES = ["log", "catalogue", "realm-fallback"]
+STATUSES = ["verified", "source", "spreadsheet-only", "cesm2"]       # + "missing" (no tokens)
+COMPONENT_SOURCES = ["log", "source", "catalogue", "realm-fallback"]
 # Components whose namelists take a `NAME:FLAG` averaging suffix (CAM `fincl`,
 # CTSM `hist_fincl`). CICE, MOM6, MOSART and CISM choose time methods elsewhere.
 COLON_COMPONENTS = ["atm", "lnd"]
@@ -98,11 +98,13 @@ def build_bundle():
         "t": [{"n": t["name"], "st": t["status"], "c": t["component"],
                "cs": t["component_source"], "log": t["log_components"],
                "cat": t["catalogue_state"], "mm": t["realm_mismatch"],
-               "m": t["method"], "ms": t["method_source"]}
+               "m": t["method"], "ms": t["method_source"],
+               "sc": t["source_certainty"], "ref": t["source_ref"], "al": t["alias_of"]}
               for t in r["tokens"]],
     } for r in doc["requests"]]
     return {"components": COMPONENTS, "statuses": STATUSES,
             "component_sources": COMPONENT_SOURCES,
+            "source_configuration": doc.get("source_configuration"),
             "colon_components": COLON_COMPONENTS,
             "configs": configs,
             "default_config": [c["key"] for c in configs].index(DEFAULT_CONFIG),

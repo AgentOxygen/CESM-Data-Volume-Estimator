@@ -113,3 +113,11 @@ def test_mom6_diag_table_modules_reductions_and_aliases():
     assert '"ocean_model", "tos", "tos_max", "${CASE}.mom6.h.mon.native.%4yr-%2mo", "all", "max", "none", 2' in t
     assert '"ocean_model_z", "so", "so_inst"' in t and '"ocean_model", "mystery", "mystery"' in t
     assert '"${CASE}.mom6.h.day.z.%4yr-%2mo", 1, "days", 1, "days", "time", 1, "months"' in t
+
+
+def test_header_reports_source_only_and_unevidenced_lines():
+    code = (f"console.log(JSON.stringify(require({json.dumps(str(JS))}).build('atm', "
+            f"[{{name:'T',freq:'mon',method:'A',items:[]}}], {{unverified: 2, sourceOnly: 5, sourceConfiguration: 'CFG'}})))")
+    t = json.loads(subprocess.run(["node", "-e", code], capture_output=True, text=True, check=True).stdout)["text"]
+    assert "2 line(s) have no CESM3 source or run-log evidence" in t
+    assert "5 line(s) are registered by the CESM3 source for CFG but were not seen in a run log" in t

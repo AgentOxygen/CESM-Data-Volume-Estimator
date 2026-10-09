@@ -10,7 +10,7 @@ Constituent fields (`Q`, `O3`, `SFso4_a1`, `so4_a1_SRF`, ...) are registered
 in loops over `cnst_name(m)`. Those loops are expanded with the constituents
 a CAM7 build registers: `Q` (physics/cam/physpkg.F90), the PUMAS
 `cnst_names` array, and the species of chemistry package `CHEM`, which
-`bld/configure` defaults to for `-phys cam7`. A loop over a subset of
+the baseline compset (see configurations.yaml) selects. A loop over a subset of
 constituents still expands to all of them, so an expanded record can
 over-claim; its `name_expr` says it was expanded.
 """
@@ -26,7 +26,7 @@ HORIZONTAL = ("CAM grid name. physgrid is [ncol] on spectral-element grids and "
               "[lat, lon] on finite-volume; other names (GLL, fv_centers_zonal, ...) "
               "are CAM's other registered grids.")
 
-CHEM = "ghg_mam4"
+CHEM = "trop_strat_mam5_t4s2"      # BHISTE_MTt4s: -chem from CAM_CONFIG_OPTS for %CT4S2
 CONSTITUENT_ARRAYS = [
     ("src/physics/cam7/micro_pumas_cam.F90", "cnst_names"),
     (f"src/chemistry/pp_{CHEM}/mo_sim_dat.F90", "solsym"),
@@ -44,10 +44,19 @@ def known_names(root):
     # constituents.F90 builds public per-constituent name arrays used all over
     # CAM (`sflxnam(m) = 'SF'//cnst_name(m)`, ptendnam, tottnam, ...).
     env = fortran.assignments(fortran.statements(read(root / "src/physics/cam/constituents.F90")))
+    templates = {}
     for var, rhs in env.items():
         if any("cnst_name" in r for r in rhs):
             known[var] = sorted({n for r in rhs for n in fortran.expand(r, {}, known)})
+            templates[var] = rhs
+    known["__templates__"] = templates
     return known
+
+
+def constituent_indexes(text):
+    """`call cnst_get_ind('CLDICE', ixcldice)` -> {'ixcldice': 'CLDICE'}: index variables that name one constituent."""
+    return {m.group(2).lower(): m.group(1) for m in
+            re.finditer(r"cnst_get_ind\s*\(\s*'([^']+)'\s*,\s*(\w+)", text, re.I)}
 
 
 def _dims(text):
@@ -58,9 +67,11 @@ def _dims(text):
 
 
 def scrape(root):
-    known = known_names(root)
+    known, indexes = known_names(root), {}
     for rel, routine, call, env in calls(root, "src", ["addfld", "history_add_field"]):
-        common = dict(env=env, known=known, registrar=routine, source=f"{rel}:{call.line}")
+        if rel not in indexes:
+            indexes[rel] = constituent_indexes(read(root / rel))
+        common = dict(env=env, known={**known, "__index__": indexes[rel]}, registrar=routine, source=f"{rel}:{call.line}")
         if routine == "addfld":
             grid = call.kw.get("gridname")
             yield from records(

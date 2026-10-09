@@ -45,8 +45,8 @@ requests (`tclm`, `tclmdc`, `tmaxavg`, `tminavg`) are written as the nearest
 direct flag with a post-processing caveat shown in the audit view.
 
 Click any row for its audit trail: the raw spreadsheet cell, UID, CSV line,
-priority groups and the logs involved. Each component's **audit .csv** carries
-the same trail for every exported line; the `.txt` itself holds CESM3 names
+priority groups and the logs involved. Each component's **csv** carries
+the same trail for every exported line; **raw_text** itself holds CESM3 names
 only, never compound names.
 
 ## How the data is made

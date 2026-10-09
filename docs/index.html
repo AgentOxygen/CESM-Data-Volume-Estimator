@@ -54,6 +54,7 @@
            border: 1px solid var(--line); border-radius: 6px; padding: 4px 12px;
            box-shadow: 0 1px 4px rgba(0,0,0,.12); }
   #total b { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #total button { margin-top: 4px; font-size: 12px; }
   #total span { display: block; font-size: 11px; color: var(--muted); }
   .approx { color: var(--warn); }
   .note { font-size: 12px; color: var(--muted); margin-top: 6px; }
@@ -79,11 +80,11 @@
     <div class="row"><span class="lbl">mapping</span>
       <label><input type="checkbox" data-k="st" value="verified" checked>
         <span class="sym s-verified">&#10003;</span> verified (spreadsheet + CESM3 log) <i id="n-verified"></i></label>
-      <label><input type="checkbox" data-k="st" value="spreadsheet-only" checked>
+      <label><input type="checkbox" data-k="st" value="spreadsheet-only">
         <span class="sym s-spreadsheet-only">&#9680;</span> spreadsheet only (not in log) <i id="n-spreadsheet-only"></i></label>
-      <label><input type="checkbox" data-k="st" value="cesm2" checked>
+      <label><input type="checkbox" data-k="st" value="cesm2">
         <span class="sym s-cesm2">&#8634;</span> old CESM2 mapping <i id="n-cesm2"></i></label>
-      <label><input type="checkbox" data-k="st" value="missing" checked>
+      <label><input type="checkbox" data-k="st" value="missing">
         <span class="sym s-missing">&#9888;</span> missing mapping <i id="n-missing"></i></label>
     </div>
     <div class="row"><span class="lbl">component from</span>
@@ -117,10 +118,12 @@
     which is therefore a lower bound.</div>
 </header>
 
-<div id="total"><b id="tot">&ndash;</b> GB/yr<span id="totnote"></span></div>
+<div id="total"><b id="tot">&ndash;</b> GB/yr<span id="totnote"></span>
+  <button id="zip" disabled>download namelists (.zip)</button></div>
 
 <main id="main"><div class="hint">Loading&hellip;</div></main>
 
+<script src="namelist.js"></script>
 <script>
 let B;
 const state = { exp: "", tier: "all", st: new Set(), cs: new Set(), noFreq: new Set(), noRealm: new Set(), cfg: 0 };
@@ -210,8 +213,9 @@ function compute() {
 let current;   // last compute() result, for downloads and row expansion
 
 function render() {
-  if (!state.exp) { $("tot").textContent = "\u2013"; $("totnote").textContent = ""; $("main").innerHTML = '<div class="hint">Choose an experiment to list the CESM3 variables its CMIP7 request needs.</div>'; return; }
+  if (!state.exp) { $("zip").disabled = true; $("tot").textContent = "\u2013"; $("totnote").textContent = ""; $("main").innerHTML = '<div class="hint">Choose an experiment to list the CESM3 variables its CMIP7 request needs.</div>'; return; }
   current = compute();
+  $("zip").disabled = !Object.keys(Namelist.COMPONENTS).some(c => current.comps[c].size);
   for (const k of Object.keys(current.counts)) { const e = $("n-" + k); if (e) e.textContent = `(${current.counts[k]})`; }
   let total = 0, unpriced = 0, lines = 0;
   const sub = {};
@@ -230,7 +234,8 @@ function render() {
     parts.push(`<details class="comp" data-c="${c}" ${rows.length < 400 ? "open" : ""}><summary><span>${c}</span>` +
       `<span class="sub">${rows.length} variable/frequency lines` + (sub[c] ? `, ${esc(fmtGB(sub[c]))} GB/yr` : "") + (miss.length ? `, ${miss.length} requests with no mapping` : "") + `</span>` +
       `<button data-dl="txt" data-c="${c}" ${rows.length ? "" : "disabled"}>download .txt</button>` +
-      `<button data-dl="csv" data-c="${c}" ${rows.length ? "" : "disabled"}>audit .csv</button></summary>` +
+      `<button data-dl="csv" data-c="${c}" ${rows.length ? "" : "disabled"}>audit .csv</button>` +
+      (Namelist.COMPONENTS[c] ? `<button data-dl="nl" data-c="${c}" ${rows.length ? "" : "disabled"}>${Namelist.COMPONENTS[c].file}</button>` : "") + `</summary>` +
       `<div class="scroll"><table><tbody>`);
     rows.forEach((row, i) => {
       const sts = [...new Set(row.items.map(x => x.t.st))], srcs = [...new Set(row.items.map(x => x.t.cs))];
@@ -300,10 +305,30 @@ function save(text, filename, type) {
 
 const csvCell = (v) => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
 
+const nlMeta = (rows) => ({ iceFields: B.cice_fields, momFields: B.mom_fields, title: `experiment ${state.exp}; ${$("tier").selectedOptions[0].text}`,
+  unverified: rows.filter(r => r.items.some(x => x.t.st !== "verified")).length });
+
+// One zip of every component's namelist(s) for the current selection.
+$("zip").addEventListener("click", () => {
+  const files = [];
+  for (const c of Object.keys(Namelist.COMPONENTS)) {
+    const rows = [...current.comps[c].values()].sort(byLine);
+    if (rows.length) files.push(...Namelist.files(c, rows, nlMeta(rows)));
+  }
+  if (!files.length) return;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([Namelist.zip(files)], { type: "application/zip" }));
+  a.download = `cesm3_${state.exp}_namelists.zip`; a.click(); URL.revokeObjectURL(a.href);
+});
+
 function download(kind, c) {
   const rows = [...current.comps[c].values()].sort(byLine);
   const base = `cesm3_${state.exp}_${c}`;
-  if (kind === "txt") {
+  if (kind === "nl") {
+    const out = Namelist.build(c, rows, nlMeta(rows));
+    if (out.error) { alert(out.error); return; }
+    save(out.text, Namelist.COMPONENTS[c].file, "text/plain");
+  } else if (kind === "txt") {
     const head = [`# CESM3 ${c} history variables needed for the CMIP7 request: experiment ${state.exp}`,
       `# priority: ${$("tier").selectedOptions[0].text}; statuses: ${[...state.st].filter(s => s !== "missing").join(", ")}`,
       `# one "VARIABLE FREQUENCY" per line; frequency is the CMIP7 label (mon, day, 6hr, fx, ...)`,
@@ -328,7 +353,7 @@ function download(kind, c) {
 function setup() {
   $("exp").insertAdjacentHTML("beforeend", Object.keys(B.experiments).map(e =>
     `<option value="${esc(e)}">${esc(e)} (${B.experiments[e].length})</option>`).join(""));
-  state.st = new Set(["verified", "spreadsheet-only", "cesm2", "missing"]);
+  state.st = new Set(["verified"]);   // unverified names abort a run, so export defaults to verified only
   state.cs = new Set(B.component_sources);
   // CMIP7 "primary realm" of each request; chemistry and aerosol first, as they are the usual cut.
   const order = ["aerosol", "atmosChem"];

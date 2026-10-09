@@ -1,0 +1,22 @@
+# MOM6 diagnostics named in the CESM3 diag_table template, by FMS module
+# (components/mom/param_templates/diag_table.yaml, tag cesm3_0_alpha09e). Frozen list; used by
+# the namelist exporter to choose a module per field. Not a complete list of what MOM6 can write.
+ocean_model: [BS_coeff_h, Coriolis, Geo_heat, Heat_PmE, KE, KPP_NLT_dSdt, KPP_NLT_dTdt, KPP_NLT_saln_budget,
+  KPP_NLT_temp_budget, KPP_OBLdepth, KPP_QminusSW, KPP_netSalt, Kv_u, Kv_v, LwLatSens, MEKE, Rd_dx, SSH,
+  SSU, SSV, S_adx_2d, S_ady_2d, T_adx_2d, T_ady_2d, T_diffx_2d, T_diffy_2d, T_hbd_diffx_2d, T_hbd_diffy_2d,
+  agessc, areacello, areacello_bu, areacello_cu, areacello_cv, cfc11_flux, cfc12_flux, cos_rot, cpocean,
+  deptho, difmxybo, difmxylo, diftrblo, diftrelo, difvho, difvso, dispkexyfo, e, evs, ficeberg, friver,
+  frunoff_glc, fsitherm, geolat, geolat_c, geolat_u, geolat_v, geolon, geolon_c, geolon_u, geolon_v, h,
+  heat_content_cond, heat_content_evap, heat_content_fprec, heat_content_frunoff, heat_content_frunoff_glc,
+  heat_content_lprec, heat_content_lrunoff, heat_content_surfwater, heat_content_vprec, hfds, hfevapds,
+  hfibthermds, hflso, hfsifrazil, hfsnthermds, hfsso, ice_fraction, lrunoff_glc, mass_wt, mlotst, mlotstsq,
+  net_fresh_water_global_adjustment, net_heat_coupler, net_massin, net_massout, opottempmint, pbo, prlq,
+  prsn, pso, rhopot0, rhopot2, rhozero, rlntds, rsdo, rsntds, salt_flux_added, salt_flux_global_restoring_adjustment,
+  seaice_melt_heat, sfdsi, sin_rot, skeb_amp, skeb_taper_u, skeb_taper_v, so, sob, soga, somint, sos,
+  sosga, sossq, speed, tauuo, tauvo, taux_bot, tauy_bot, thetao, thetaoga, tob, tos, tosga, tossq, u10_sqr,
+  uh, uhGM, uhbt, uhml, umo, uo, ustar, vh, vhGM, vhbt, vhml, vmo, vo, volcello, vprec, vprec_global_adjustment,
+  wet, wet_c, wet_u, wet_v, wfo, zos, zossq]
+ocean_model_rho2: [agessc, cfc11, cfc12, e, so, thetao, uhGM, uhml, umo, vhGM, vhml, vmo, volcello]
+ocean_model_z: [Kv_u, Kv_v, N2_int, S_advection_xy, T_advection_xy, agessc, cfc11, cfc12, difmxybo, difmxylo,
+  diftrblo, diftrelo, difvho, difvso, h, opottempdiff, opottemptend, osaltdiff, osalttend, rhopot0, rhopot2,
+  rsdoabsorb, so, thetao, uhGM, uhml, umo, uo, vhGM, vhml, vmo, vo, volcello]

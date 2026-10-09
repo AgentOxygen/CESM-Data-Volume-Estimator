@@ -11,7 +11,20 @@
   body { margin: 0; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
          color: #1a1a1a; background: var(--bg); }
   header { background: var(--head); border-bottom: 1px solid var(--line); padding: 12px 16px; }
-  h1 { font-size: 16px; margin: 0 0 8px; font-weight: 600; }
+  h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  .subtitle { font-size: 12px; color: var(--muted); margin: 1px 0 8px; }
+  .subtitle a { color: var(--accent); }
+  #infoBtn { font-size: 12px; }
+  #infoBtn[aria-expanded="true"] { background: #eef2f7; }
+  #info { margin: 6px 0 4px; padding: 8px 12px; background: #fff; border: 1px solid var(--line); border-radius: 6px; }
+  #info[hidden] { display: none; }
+  #info h2 { margin-top: 10px; } #info h2:first-child { margin-top: 0; }
+  #info p { margin: 4px 0; font-size: 12px; color: #333; max-width: 70em; }
+  #info ul { margin: 4px 0 4px 1.2em; padding: 0; font-size: 12px; color: #333; max-width: 70em; }
+  #info li { margin: 2px 0; }
+  .legend { margin: 6px 0 0; }
+  .star { font: inherit; font-size: 22px; font-weight: 600; line-height: 1; padding: 0 2px; border: 0; background: none;
+          color: var(--accent); cursor: pointer; vertical-align: top; }
   h2 { font-size: 13px; margin: 0 0 6px; font-weight: 600; }
   .step { margin: 10px 0; }
   .step > b { display: inline-block; width: 1.6em; height: 1.6em; line-height: 1.6em;
@@ -25,7 +38,16 @@
   button { cursor: pointer; } button:hover { background: #eef2f7; }
   button:disabled { opacity: .4; cursor: default; }
   #exp { min-width: 16em; }
-  .legend { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 18px; }
+  /* step 1: two label/select rows on one grid, so the labels and the selects line up */
+  .step.s1 { display: flex; gap: 6px; align-items: flex-start; }
+  .step.s1 > b { margin-top: 3px; flex: none; }
+  .ctl { display: grid; grid-template-columns: max-content max-content max-content max-content; gap: 6px 8px; align-items: center; }
+  .ctl label.r { margin-left: 8px; }
+  .ctl select.wide { grid-column: 2 / span 3; justify-self: start; }
+  #filters[hidden] { display: none; }
+  #filtersBtn { font-size: 12px; margin-left: 6px; }
+  #filterNote { margin-left: 8px; }
+  .legend { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
   .sym { display: inline-block; min-width: 1.2em; text-align: center; font-weight: 700; }
   .s-verified { color: var(--ok); } .s-source { color: var(--ok); opacity: .75; } .s-spreadsheet-only { color: var(--warn); }
   .s-missing { color: var(--bad); }
@@ -34,7 +56,8 @@
   .pill.realm-fallback { border-color: var(--warn); color: var(--warn); }
   .pill.mm { border-color: var(--bad); color: var(--bad); }
   main { padding: 8px 16px 60px; }
-  #summary { margin: 8px 0; color: var(--muted); }
+  #summary { margin: 8px 0; color: var(--muted); display: flex; justify-content: space-between; }
+  #summary .dl { padding-right: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
   details.comp { border-bottom: 1px solid var(--line); }
   details.comp > summary { cursor: pointer; padding: 8px 4px; font-weight: 600; display: flex;
                            gap: 12px; align-items: center; }
@@ -64,18 +87,30 @@
 
 <header>
   <h1>CMIP7 data request &rarr; CESM3 history variables</h1>
+  <div class="subtitle">CESM3 source:
+    <a href="https://github.com/ESCOMP/CESM/tree/cesm3_0_alpha09e" target="_blank" rel="noopener">cesm3_0_alpha09e</a>
+    &middot; CMIP7 data request:
+    <a href="https://wcrp-cmip.org/cmip7-data-request-v1-1/" target="_blank" rel="noopener">v1.1</a></div>
 
-  <div class="step"><b>1</b><label>Experiment
-    <select id="exp"><option value="">choose an experiment&hellip;</option></select></label>
-    <label>Priority <select id="tier">
-      <option value="1">Core only</option><option value="2">Core + High</option>
-      <option value="3">Core + High + Medium</option>
-      <option value="4">Core + High + Medium + Low</option>
-      <option value="all" selected>everything requested (incl. unranked)</option></select></label>
-    <label>Grid &amp; levels <select id="cfg"></select></label>
+  <div class="step s1"><b>1</b>
+    <div class="ctl">
+      <label for="exp">Experiment</label>
+      <select id="exp"><option value="">choose an experiment&hellip;</option></select>
+      <label for="tier" class="r">Priority</label>
+      <select id="tier">
+        <option value="1">Core only</option><option value="2">Core + High</option>
+        <option value="3">Core + High + Medium</option>
+        <option value="4">Core + High + Medium + Low</option>
+        <option value="all" selected>everything requested (incl. unranked)</option></select>
+      <label for="cfg">Grid &amp; levels</label>
+      <select id="cfg" class="wide"></select>
+    </div>
   </div>
 
   <div class="step"><b>2</b> Filter by how each mapping was derived
+    <button id="filtersBtn" aria-expanded="false" aria-controls="filters">Show Filters</button>
+    <span id="filterNote" class="note"></span>
+    <div id="filters" hidden>
     <div class="row"><span class="lbl">mapping</span>
       <label><input type="checkbox" data-k="st" value="verified" checked>
         <span class="sym s-verified">&#10003;</span> verified (spreadsheet + CESM3 log) <i id="n-verified"></i></label>
@@ -92,6 +127,7 @@
       <label><input type="checkbox" data-k="cs" value="realm-fallback" checked>
         <span class="pill realm-fallback">realm</span> CMIP7 realm guess <i id="n-cs-realm-fallback"></i></label>
     </div>
+    </div>
   </div>
 
   <div class="step"><b>3</b> Realms and frequencies requested
@@ -99,8 +135,52 @@
     <div class="row" id="freqs"><span class="lbl">frequency</span></div>
   </div>
 
-  <div class="step"><b>4</b> Download one list per component (below). Only names that pass the filters are
-    exported; missing mappings never are. The audit CSV beside each list traces every line to its source rows.</div>
+  <div class="step"><b>4</b> Download namelists by component (below) or as .zip archive (top right).</div>
+
+  <button id="infoBtn" aria-expanded="false" aria-controls="info">Show methodology explanation</button>
+  <div id="info" hidden>
+    <h2>How the variable lists were made</h2>
+    <p>The CESM3 source (tag <code>cesm3_0_alpha09e</code>) was parsed statically, not run: every history-registration call
+      (CAM, CTSM and FATES, CICE, MOM6 and MARBL, MOSART, CISM) gives a field&rsquo;s name, dimensions, units and file:line. Names
+      built in loops are expanded from the source&rsquo;s own lists, and registrations the baseline configuration (BHISTE_MTt4s)
+      switches off are dropped. Run logs add the &ldquo;verified&rdquo; status.</p>
+    <h2>Downloads</h2>
+    <p>Each component row has three downloads, all limited to the lines that pass the filters (requests whose spreadsheet row gives
+      no CESM variable name are never exported). The <b>.zip archive</b> (top right) bundles every component&rsquo;s namelist.</p>
+    <ul>
+      <li><b>namelist</b> (<code>user_nl_cam</code>, <code>user_nl_clm</code>, &hellip;; <code>diag_table.unresolved</code> for the
+        ocean): the history configuration to paste into a case, headed with the date, the experiment and how much of it rests on
+        source evidence alone. Not yet run in a real case.</li>
+      <li><b>raw_text</b>: the plain list behind it, one <code>VARIABLE FREQUENCY</code> per line (<code>:FLAG</code> for CAM and
+        CTSM, the time method as a comment elsewhere), CESM3 names only.</li>
+      <li><b>csv</b>: the audit trail, one row per exported line: status, component source, CMIP7 compound name(s), UID,
+        spreadsheet line and cell, priority groups, log components, source certainty and file:line, and the estimated GB/yr, so a
+        list can be checked against the request offline.</li>
+    </ul>
+    <h2>* How the data volume is estimated</h2>
+    <p>The figure marked * (top right, and the per-component and per-line sizes) is the <b>raw, uncompressed</b> volume
+      of the selected history output, in GB (10<sup>9</sup> bytes) per <b>simulated year</b>. It is a rough planning
+      number, not a prediction of file sizes on disk.</p>
+    <ul>
+      <li><b>One line</b> = one variable at one frequency. Its size per time sample is
+        4 bytes (CESM history files are single precision by default) &times; the number of horizontal grid cells &times; the sizes of the
+        field&rsquo;s other dimensions (levels, soil layers, categories, &hellip;). The dimensions come from the field&rsquo;s
+        CESM3 source record; the cell counts and dimension sizes for the chosen grid are in <code>data/grids.yaml</code>
+        and <code>data/vertical.yaml</code>. Land fields are priced as gridded output (one value per grid cell), as the exported
+        namelist writes them.</li>
+      <li><b>Per year</b> = size per sample &times; samples per simulated year on a 365-day calendar: yearly 1, monthly 12,
+        daily 365, 6-hourly 1,460, 3-hourly 2,920, hourly 8,760, decadal 0.1. The total is the sum over the lines that pass the
+        filters above.</li>
+      <li><b>No compression is applied.</b> If your case writes compressed (deflated) netCDF the files will be smaller, by an
+        amount that depends on the data. Nothing here models chunking, packing or file-system block overheads.</li>
+      <li><b>Only the data variables are counted</b>: not coordinate or bounds variables, time_bnds, file metadata, restart
+        files, or default output that the exported files leave switched on: CICE and MOSART add to their defaults, so those
+        components write more than the sizes shown.</li>
+      <li><b>It is a lower bound.</b> Lines with no CESM3 source record, an unsized dimension, or a frequency without a per-year
+        count (<code>fx</code>, <code>subhr</code>) are shown as &ndash; and left out. The note under the total says how many
+        lines were priced.</li>
+    </ul>
+  </div>
 
   <div class="legend">
     <span><span class="sym s-verified">&#10003;</span> in spreadsheet and registered by a CESM3 run</span>
@@ -110,14 +190,9 @@
     <span><span class="pill mm">&ne;realm</span> log put it in a different component than its realm implies</span>
     <span>Click a row to audit it.</span>
   </div>
-  <div class="note">Sizes are GB (10<sup>9</sup> bytes) per simulated year, raw uncompressed, one line per
-    variable and frequency: 4 bytes &times; horizontal cells &times; the field&rsquo;s other dimensions, which come
-    from the CESM3 source record on the chosen grid. Land fields are priced as gridded output.
-    Lines with no source record, an unsized dimension or an unmodeled frequency (fx, subhr) are unpriced (&ndash;) and
-    left out of the total, which is therefore a lower bound.</div>
 </header>
 
-<div id="total"><b id="tot">&ndash;</b> GB/yr<span id="totnote"></span>
+<div id="total"><b id="tot">&ndash;</b><button class="star" id="star" title="How this is calculated (raw, uncompressed, lower bound)" aria-label="how the volume is estimated">*</button> GB/yr<span id="totnote"></span>
   <button id="zip" disabled>download namelists (.zip)</button></div>
 
 <main id="main"><div class="hint">Loading&hellip;</div></main>
@@ -161,6 +236,28 @@ function explain(t, r) {
   }[t.cs];
   return `${status}.<br>${comp}.` + (t.mm ? ` <span class="pill mm">&ne;realm</span> realm ${esc(r.realm)} would have implied a different component.` : "");
 }
+
+// --- legend & pricing panel ------------------------------------------------
+
+function showInfo(open) {
+  $("info").hidden = !open;
+  $("infoBtn").setAttribute("aria-expanded", String(open));
+  $("infoBtn").textContent = open ? "Hide methodology explanation" : "Show methodology explanation";
+}
+$("infoBtn").addEventListener("click", () => showInfo($("info").hidden));
+function showFilters(open) {
+  $("filters").hidden = !open;
+  $("filtersBtn").setAttribute("aria-expanded", String(open));
+  $("filtersBtn").textContent = open ? "Hide Filters" : "Show Filters";
+}
+$("filtersBtn").addEventListener("click", () => showFilters($("filters").hidden));
+// With the filters tucked away, say what they currently let through.
+function filterNote() {
+  const on = [...document.querySelectorAll("#filters input[data-k=st]")].filter(c => c.checked)
+    .map(c => ({ verified: "verified", source: "in source", "spreadsheet-only": "spreadsheet only", missing: "missing" })[c.value]);
+  $("filterNote").textContent = `showing: ${on.join(", ") || "nothing"}`;
+}
+$("star").addEventListener("click", () => { showInfo(true); $("info").scrollIntoView({ behavior: "smooth", block: "center" }); });
 
 // --- volume -----------------------------------------------------------------
 
@@ -212,9 +309,11 @@ function compute() {
 
 // --- rendering --------------------------------------------------------------
 
+const openComps = new Set();   // component lists the user expanded; they start collapsed and keep their state across re-renders
 let current;   // last compute() result, for downloads and row expansion
 
 function render() {
+  filterNote();
   if (!state.exp) { $("zip").disabled = true; $("tot").textContent = "\u2013"; $("totnote").textContent = ""; $("main").innerHTML = '<div class="hint">Choose an experiment to list the CESM3 variables its CMIP7 request needs.</div>'; return; }
   current = compute();
   $("zip").disabled = !Object.keys(Namelist.COMPONENTS).some(c => current.comps[c].size);
@@ -228,16 +327,16 @@ function render() {
   }
   $("tot").textContent = fmtGB(total);
   $("totnote").textContent = `${lines - unpriced} of ${lines} lines priced`;
-  const parts = [`<div id="summary">${current.nreq} CMIP7 requests for <b>${esc(state.exp)}</b>.</div>`];
+  const parts = [`<div id="summary"><span>${current.nreq} CMIP7 requests for <b>${esc(state.exp)}</b>.</span><span class="dl">Downloads</span></div>`];
   for (const c of B.components) {
     const rows = [...current.comps[c].values()].sort(byLine);
     const miss = current.missing[c];
     if (!rows.length && !miss.length) continue;
-    parts.push(`<details class="comp" data-c="${c}" ${rows.length < 400 ? "open" : ""}><summary><span>${c}</span>` +
+    parts.push(`<details class="comp" data-c="${c}" ${openComps.has(c) ? "open" : ""}><summary><span>${c}</span>` +
       `<span class="sub">${rows.length} variable/frequency lines` + (sub[c] ? `, ${esc(fmtGB(sub[c]))} GB/yr` : "") + (miss.length ? `, ${miss.length} requests with no mapping` : "") + `</span>` +
-      `<button data-dl="txt" data-c="${c}" ${rows.length ? "" : "disabled"}>download .txt</button>` +
-      `<button data-dl="csv" data-c="${c}" ${rows.length ? "" : "disabled"}>audit .csv</button>` +
-      (Namelist.COMPONENTS[c] ? `<button data-dl="nl" data-c="${c}" ${rows.length ? "" : "disabled"}>${Namelist.COMPONENTS[c].file}</button>` : "") + `</summary>` +
+      (Namelist.COMPONENTS[c] ? `<button data-dl="nl" data-c="${c}" ${rows.length ? "" : "disabled"} title="history namelist for ${c}">${Namelist.COMPONENTS[c].file}</button>` : "") +
+      `<button data-dl="txt" data-c="${c}" ${rows.length ? "" : "disabled"} title="plain list of VARIABLE FREQUENCY lines">raw_text</button>` +
+      `<button data-dl="csv" data-c="${c}" ${rows.length ? "" : "disabled"} title="audit trail: every line traced to its spreadsheet rows">csv</button></summary>` +
       `<div class="scroll"><table><tbody>`);
     rows.forEach((row, i) => {
       const sts = [...new Set(row.items.map(x => x.t.st))], srcs = [...new Set(row.items.map(x => x.t.cs))];
@@ -282,6 +381,12 @@ function detailHtml(items) {
     `raw <code>CESM Variable Name</code> cell: <code>${esc(r.raw) || "(empty)"}</code> &middot; UID <code>${esc(r.u)}</code><br>` +
     `priority: ${r.p ? PRIORITY[r.p] : "unranked"} &middot; groups: ${esc(r.g.join(", ")) || "(none)"}</div>`).join("");
 }
+
+// `toggle` does not bubble, so listen in the capture phase.
+$("main").addEventListener("toggle", (e) => {
+  const d = e.target;
+  if (d.classList && d.classList.contains("comp")) d.open ? openComps.add(d.dataset.c) : openComps.delete(d.dataset.c);
+}, true);
 
 $("main").addEventListener("click", (e) => {
   const dl = e.target.closest("button[data-dl]");
